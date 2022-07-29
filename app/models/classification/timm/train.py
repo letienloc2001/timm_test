@@ -591,7 +591,7 @@ def train(model, dataset, configuration):
         worker_seeding=args.worker_seeding,
         crop_pct=data_config['crop_pct'],
         is_anti_spoofing=True,
-        ten_crop=args.ten_crop,
+        ten_crop=args.ten_crop
     )
 
     loader_eval = create_loader(
