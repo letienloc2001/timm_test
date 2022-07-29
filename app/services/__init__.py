@@ -1,4 +1,4 @@
-from .classification import InferenceClassification
+from .classification import Classification
 from .detection import InferenceDetection
 from .quality_image import ImageQuality
 
