@@ -20,8 +20,8 @@ class Classification:
 			no_test_pool=True,
 		)
 
-	def infer(self, source, workers: int = 2):
-		return self.model.run(source=source, batch_size=8, workers=workers)
+	def infer(self, source):
+		return self.model.run(source=source, batch_size=8)
 
 	def train(self,
            	  data_set: str, 
