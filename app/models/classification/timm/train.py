@@ -247,8 +247,8 @@ def _parse_args(dataset, configuration):
                        help='Drop path rate (default: None)')
     group.add_argument('--drop-block', type=float, default=None, metavar='PCT',
                        help='Drop block rate (default: None)')
-    group.add_argument('--ten-crop', type=int, nargs=2, default=[400, 400], metavar='N',
-                       help='TenCrop (default 400x400)')
+    group.add_argument('--ten-crop', action='store_true', default=False,
+                       help='TenCrop enabled')
     ###################################################################################################
     group = parser.add_argument_group('Batch norm parameters',
                                       'Only works with gen_efficientnet based models currently.')
