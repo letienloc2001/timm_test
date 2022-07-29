@@ -591,6 +591,7 @@ def train(model, dataset, configuration):
         use_multi_epochs_loader=args.use_multi_epochs_loader,
         worker_seeding=args.worker_seeding,
         crop_pct=data_config['crop_pct'],
+        is_anti_spoofing=True,
     )
 
     loader_eval = create_loader(
@@ -623,6 +624,7 @@ def train(model, dataset, configuration):
         crop_pct=data_config['crop_pct'],
         use_multi_epochs_loader=args.use_multi_epochs_loader,
         worker_seeding=args.worker_seeding,
+        is_anti_spoofing=True,
     )
 
     # NOTE: DON'T USE BY DEFAULT
