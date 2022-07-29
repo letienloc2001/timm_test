@@ -29,7 +29,7 @@ class Config():
             "checkpoint_path": "/tessel_coreai/checkpoint/yolov5s-milk-can.pt",
         },
         "ANTI_SPOOFING_CLASSIFICATION": {
-            "instance": "InferenceClassification",
+            "instance": "Classification",
             "checkpoint_path": "/tessel_coreai/checkpoint/mixnet_s-anti-spoofing.pth",
         },
     }
