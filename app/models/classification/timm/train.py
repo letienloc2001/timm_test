@@ -326,7 +326,11 @@ def _parse_args(dataset, configuration):
     return args, args_text
 
 
-def train(model, dataset, configuration):
+class Test:
+    def __init__(self):
+        pass
+
+    def train(model, dataset, configuration):
     utils.setup_default_logging()
     args, args_text = _parse_args(configuration=configuration, dataset=dataset)
     args.prefetcher = not args.no_prefetcher
