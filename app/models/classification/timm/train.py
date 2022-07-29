@@ -1039,17 +1039,17 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
 # 	main()
 
 from torchvision import transforms as t
-from timm import create_model
 from numpy import inf
 
 
-class anti_spoofing_trainer:
+class Trainer:
     def __init__(self,
                  model = None,
                  batch_size: int = 8,
                  lr: float = 0.001,
                  weight_decay: float = 0.0001,
-                 momentum: float = 0.9):
+                 momentum: float = 0.9,
+                 cuda_device: str = "cuda:0"):
         """
         Load the model weights and configure images transformer & device
 
@@ -1059,8 +1059,10 @@ class anti_spoofing_trainer:
             lr (float): learning rate (default: 0.001)
             weight_decay (float): weight decay (default: 0.0001)
             momentum (float): momentum (default: 0.9)
+            cuda_device (str): CUDA device (default: cuda:0)
         """
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        
+        self.device = torch.device(cuda_device if torch.cuda.is_available() else 'cpu')
         self.batch_size = batch_size
         self.num_crops = 10
         self.transform = t.Compose([
@@ -1072,10 +1074,18 @@ class anti_spoofing_trainer:
         ])
         self.model = torch.nn.Sequential(model, torch.nn.Softmax(dim=1))
         self.model.to(self.device)
-        self.optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, self.model.parameters()), lr=lr, weight_decay=weight_decay, momentum=momentum)
+        self.optimizer = torch.optim.SGD(
+            filter(lambda p: p.requires_grad, self.model.parameters()), 
+            lr = lr, 
+            weight_decay = weight_decay, 
+            momentum = momentum
+        )
         self.criterion = torch.nn.CrossEntropyLoss()
 
-    def train(self, data_set: str, num_epochs: int, best_model_path: str = 'mixnet_s-anti-spoofing.pth'):
+    def train(self, 
+              data_set: str, 
+              num_epochs: int, 
+              best_model_path: str = 'mixnet_s-anti-spoofing.pth'):
         """
         Train model
 
@@ -1087,36 +1097,36 @@ class anti_spoofing_trainer:
         Return:
             the best model path
         """
-        # TODO: CREATE LOADERS
-        TRAIN_SET = os.path.join(data_set, 'train')
-        VAL_SET = os.path.join(data_set, 'validation')
+        # CREATE LOADERS
+        train_path = os.path.join(data_set, 'train')
+        val_path = os.path.join(data_set, 'validation')
 
-        train_dataset = torchvision.datasets.ImageFolder(root=TRAIN_SET, transform=self.transform)
-        val_dataset = torchvision.datasets.ImageFolder(root=VAL_SET, transform=self.transform)
+        train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=self.transform)
+        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=self.transform)
 
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
 
 
-        print('🚀 START TRAINING ...')
+        _logger.info('🚀 START TRAINING ...')
+        
         min_valid_loss = inf
         train_loss_vals = []
         val_loss_vals = []
         train_accu_vals = []
         val_accu_vals = []
+        
         for epoch in range(num_epochs):
-            print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
+            _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
 
-            # TODO: TRAINING LOOP
+            # TRAINING Process
             train_loss = 0.0
             correct = 0
             total = 0
             train_epoch_loss = []
+            
             self.model.train()
-            for i, (images, labels) in enumerate(train_loader):
-                count = 100 * i / len(train_loader)
-                print('\r', end='')
-                print('|' + ('=' * int(count / 2)) + '>' + (' ' * (50 - int(count / 2)) + '| ' + f'{count:.2f} %'), end='')
+            for _, (images, labels) in enumerate(train_loader):
                 crop_list = images.tolist()
                 for crop_idx in range(self.num_crops):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -1135,21 +1145,21 @@ class anti_spoofing_trainer:
                     self.optimizer.step()
                     train_loss += loss.item()
 
-            print('\r', end='')
-            print(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * self.num_crops):.5f}')
+            _logger.info('\r', end='')
+            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, \
+                Training Loss  : {train_loss / (len(train_loader) * self.num_crops):.5f}')
+            
             train_loss_vals.append(sum(train_epoch_loss) / len(train_epoch_loss))
             train_accu_vals.append(100 * correct / total)
 
-            # TODO: VALIDATION LOOP
+            # VALIDATION Process
             valid_loss = 0.0
             correct = 0
             total = 0
             val_epoch_loss = []
+            
             self.model.eval()
-            for i, (images, labels) in enumerate(val_loader):
-                count = 100 * i / len(val_loader)
-                print('\r', end='')
-                print('|' + ('=' * int(count / 2)) + '>' + (' ' * (50 - int(count / 2)) + '| ' + f'{count:.2f} %'), end='')
+            for _, (images, labels) in enumerate(val_loader):
                 crop_list = images.tolist()
                 for crop_idx in range(self.num_crops):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -1165,16 +1175,20 @@ class anti_spoofing_trainer:
                     val_epoch_loss.append(loss.item())
                     valid_loss += loss.item()
 
-            print('\r', end='')
-            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / (len(val_loader) * self.num_crops):.5f}')
+            _logger.info('\r', end='')
+            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, \
+                Validation Loss: {valid_loss / (len(val_loader) * self.num_crops):.5f}')
+            
             val_loss_vals.append(sum(val_epoch_loss) / len(val_epoch_loss))
             val_accu_vals.append(100 * correct / total)
 
             # TODO: SAVE MODEL CHECKPOINT, EXCEPT THE LAST SOFTMAX LAYER
             if min_valid_loss > valid_loss:
-                print(f'🎯 CHECKPOINT: Validation Loss ({min_valid_loss / (len(val_loader) * self.num_crops):.5f} ==> {valid_loss / (len(val_loader) * self.num_crops):.5f})')
+                _logger.info(f'🎯 CHECKPOINT: \
+                    Validation Loss ({min_valid_loss / (len(val_loader) * self.num_crops):.5f} \
+                        ==> {valid_loss / (len(val_loader) * self.num_crops):.5f})')
                 min_valid_loss = valid_loss
-                mixnet_s, softmax = self.model.children()
+                mixnet_s, _ = self.model.children()
                 torch.save(mixnet_s.state_dict(), best_model_path)
 
         return best_model_path
