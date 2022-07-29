@@ -23,7 +23,7 @@ MODELS_CONFIG = {
         "checkpoint_path": "yolov5s-milk-can.pt",
     },
     "ANTI_SPOOFING_CLASSIFICATION": {
-        "instance": "InferenceClassification",
+        "instance": "Classification",
         "checkpoint_path": "",
         # "checkpoint_path": "mixnet_s-anti-spoofing.pth",
     },
