@@ -566,7 +566,6 @@ def train(model, dataset, configuration):
         input_size=data_config['input_size'],
         batch_size=args.batch_size,
         is_training=True,
-        ten_crop=args.ten_crop,
         use_prefetcher=args.prefetcher,
         no_aug=args.no_aug,
         re_prob=args.reprob,
@@ -592,6 +591,7 @@ def train(model, dataset, configuration):
         worker_seeding=args.worker_seeding,
         crop_pct=data_config['crop_pct'],
         is_anti_spoofing=True,
+        ten_crop=args.ten_crop,
     )
 
     loader_eval = create_loader(
