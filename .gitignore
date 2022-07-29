@@ -1,7 +1,7 @@
 # Repo-specific GitIgnore ----------------------------------------------------------------------------------------------
 *.jpg
 *.jpeg
-test.py
+
 *.png
 *.bmp
 *.tif
@@ -384,3 +384,4 @@ output/
 *.gz
 Untitled.ipynb
 Testing notebook.ipynb
+test/
