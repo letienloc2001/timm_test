@@ -42,4 +42,4 @@ def create_app():
     # app.register_blueprint(detection_bp, url_prefix=URL_PREFIX)
     return models
 
-create_app()
+# create_app()
