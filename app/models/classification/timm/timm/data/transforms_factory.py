@@ -162,8 +162,8 @@ def transforms_imagenet_eval(
 
 def transform_customized_inference(
         img_size=400,
-        hflip=None,
-        vflip=None,
+        hflip=0.,
+        vflip=0.,
         color_jitter=None,
         auto_augment=None,
         interpolation='bilinear',
