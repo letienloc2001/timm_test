@@ -51,7 +51,7 @@ def fast_collate(batch):
         for i in range(batch_size):
             tensor[i].copy_(batch[i][0])
         return tensor, targets
-    elif isinstance(batch[0][0], list):
+    else: # isinstance(batch[0][0], list):
         if isinstance(batch[0][0][0], torch.Tensor):
             targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
             targets = torch.tensor([entry for entry in targets for _ in range(10)])
@@ -68,8 +68,8 @@ def fast_collate(batch):
                 for j in range(10):
                     tensor[i] += torch.from_numpy(batch[i][0][j])
             return tensor, targets
-    else:
-        assert False
+    # else:
+    #     assert False
 
 
 def expand_to_chs(x, n):
