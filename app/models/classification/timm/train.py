@@ -1022,154 +1022,154 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
 
 
 
-# from torchvision import transforms as t
-# from numpy import inf
+from torchvision import transforms as t
+from numpy import inf
 
-# class Trainer:
-#     def __init__(self,
-#                  model = None,
-#                  batch_size: int = 8,
-#                  lr: float = 0.001,
-#                  weight_decay: float = 0.0001,
-#                  momentum: float = 0.9,
-#                  cuda_device: str = "cuda:0"):
-#         """
-#         Load the model weights and configure images transformer & device
+class Trainer:
+    def __init__(self,
+                 model = None,
+                 batch_size: int = 8,
+                 lr: float = 0.001,
+                 weight_decay: float = 0.0001,
+                 momentum: float = 0.9,
+                 cuda_device: str = "cuda:0"):
+        """
+        Load the model weights and configure images transformer & device
 
-#         Args:
-#             model: timm model object
-#             batch_size (int): batch size (default: 8)
-#             lr (float): learning rate (default: 0.001)
-#             weight_decay (float): weight decay (default: 0.0001)
-#             momentum (float): momentum (default: 0.9)
-#             cuda_device (str): CUDA device (default: cuda:0)
-#         """
+        Args:
+            model: timm model object
+            batch_size (int): batch size (default: 8)
+            lr (float): learning rate (default: 0.001)
+            weight_decay (float): weight decay (default: 0.0001)
+            momentum (float): momentum (default: 0.9)
+            cuda_device (str): CUDA device (default: cuda:0)
+        """
 
-#         self.device = torch.device(cuda_device if torch.cuda.is_available() else 'cpu')
-#         self.batch_size = batch_size
-#         self.num_crops = 10
-#         self.transform = t.Compose([
-#             t.Resize(size=(400, 400)),
-#             t.TenCrop(size=(224, 224)),
-#             t.Lambda(lambda crops: [t.ToTensor()(crop) for crop in crops]),
-#             t.Lambda(lambda crops: [t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))(crop) for crop in crops]),
-#             t.Lambda(lambda crops: torch.stack(crops))
-#         ])
-#         self.model = torch.nn.Sequential(model, torch.nn.Softmax(dim=1))
-#         self.model.to(self.device)
-#         self.optimizer = torch.optim.SGD(
-#             filter(lambda p: p.requires_grad, self.model.parameters()),
-#             lr = lr,
-#             weight_decay = weight_decay,
-#             momentum = momentum
-#         )
-#         self.criterion = torch.nn.CrossEntropyLoss()
+        self.device = torch.device(cuda_device if torch.cuda.is_available() else 'cpu')
+        self.batch_size = batch_size
+        self.num_crops = 10
+        self.transform = t.Compose([
+            t.Resize(size=(400, 400)),
+            t.TenCrop(size=(224, 224)),
+            t.Lambda(lambda crops: [t.ToTensor()(crop) for crop in crops]),
+            t.Lambda(lambda crops: [t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))(crop) for crop in crops]),
+            t.Lambda(lambda crops: torch.stack(crops))
+        ])
+        self.model = torch.nn.Sequential(model, torch.nn.Softmax(dim=1))
+        self.model.to(self.device)
+        self.optimizer = torch.optim.SGD(
+            filter(lambda p: p.requires_grad, self.model.parameters()),
+            lr = lr,
+            weight_decay = weight_decay,
+            momentum = momentum
+        )
+        self.criterion = torch.nn.CrossEntropyLoss()
 
-#     def train(self,
-#               data_set: str,
-#               num_epochs: int,
-#               best_model_path: str = 'mixnet_s-anti-spoofing.pth'):
-#         """
-#         Train model
+    def train(self,
+              data_set: str,
+              num_epochs: int,
+              best_model_path: str = 'mixnet_s-anti-spoofing.pth'):
+        """
+        Train model
 
-#         Args:
-#             data_set (str): path/to/dataset
-#             num_epochs (int): number of epochs to train
-#             best_model_path (str): path/to/output_checkpoint_file
+        Args:
+            data_set (str): path/to/dataset
+            num_epochs (int): number of epochs to train
+            best_model_path (str): path/to/output_checkpoint_file
 
-#         Return:
-#             the best model path
-#         """
-#         # CREATE LOADERS
-#         train_path = os.path.join(data_set, 'train')
-#         val_path = os.path.join(data_set, 'validation')
+        Return:
+            the best model path
+        """
+        # CREATE LOADERS
+        train_path = os.path.join(data_set, 'train')
+        val_path = os.path.join(data_set, 'validation')
 
-#         train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=self.transform)
-#         val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=self.transform)
+        train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=self.transform)
+        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=self.transform)
 
-#         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
-#         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
+        train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
+        val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
 
 
-#         _logger.info('🚀 START TRAINING ...')
+        _logger.info('🚀 START TRAINING ...')
 
-#         min_valid_loss = inf
-#         train_loss_vals = []
-#         val_loss_vals = []
-#         train_accu_vals = []
-#         val_accu_vals = []
+        min_valid_loss = inf
+        train_loss_vals = []
+        val_loss_vals = []
+        train_accu_vals = []
+        val_accu_vals = []
 
-#         for epoch in range(num_epochs):
-#             _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
+        for epoch in range(num_epochs):
+            _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
 
-#             # TRAINING Process
-#             train_loss = 0.0
-#             correct = 0
-#             total = 0
-#             train_epoch_loss = []
+            # TRAINING Process
+            train_loss = 0.0
+            correct = 0
+            total = 0
+            train_epoch_loss = []
 
-#             self.model.train()
-#             for _, (images, labels) in enumerate(train_loader):
-#                 crop_list = images.tolist()
-#                 for crop_idx in range(self.num_crops):
-#                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
+            self.model.train()
+            for _, (images, labels) in enumerate(train_loader):
+                crop_list = images.tolist()
+                for crop_idx in range(self.num_crops):
+                    cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
 
-#                     cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
+                    cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
 
-#                     self.optimizer.zero_grad()
-#                     outputs = self.model(cropped_images)
-#                     _, predictions = torch.max(outputs.data, 1)
-#                     total += labels.size(0)
-#                     correct += (predictions == labels).sum().item()
+                    self.optimizer.zero_grad()
+                    outputs = self.model(cropped_images)
+                    _, predictions = torch.max(outputs.data, 1)
+                    total += labels.size(0)
+                    correct += (predictions == labels).sum().item()
 
-#                     loss = self.criterion(outputs, labels)
-#                     loss.backward()
-#                     train_epoch_loss.append(loss.item())
-#                     self.optimizer.step()
-#                     train_loss += loss.item()
+                    loss = self.criterion(outputs, labels)
+                    loss.backward()
+                    train_epoch_loss.append(loss.item())
+                    self.optimizer.step()
+                    train_loss += loss.item()
 
-#             _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, \
-#                 Training Loss  : {train_loss / (len(train_loader) * self.num_crops):.5f}')
+            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, \
+                Training Loss  : {train_loss / (len(train_loader) * self.num_crops):.5f}')
 
-#             train_loss_vals.append(sum(train_epoch_loss) / len(train_epoch_loss))
-#             train_accu_vals.append(100 * correct / total)
+            train_loss_vals.append(sum(train_epoch_loss) / len(train_epoch_loss))
+            train_accu_vals.append(100 * correct / total)
 
-#             # VALIDATION Process
-#             valid_loss = 0.0
-#             correct = 0
-#             total = 0
-#             val_epoch_loss = []
+            # VALIDATION Process
+            valid_loss = 0.0
+            correct = 0
+            total = 0
+            val_epoch_loss = []
 
-#             self.model.eval()
-#             for _, (images, labels) in enumerate(val_loader):
-#                 crop_list = images.tolist()
-#                 for crop_idx in range(self.num_crops):
-#                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
-#                     cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
+            self.model.eval()
+            for _, (images, labels) in enumerate(val_loader):
+                crop_list = images.tolist()
+                for crop_idx in range(self.num_crops):
+                    cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
+                    cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
 
-#                     outputs = self.model(cropped_images)
+                    outputs = self.model(cropped_images)
 
-#                     _, predictions = torch.max(outputs.data, 1)
-#                     total += labels.size(0)
-#                     correct += (predictions == labels).sum().item()
+                    _, predictions = torch.max(outputs.data, 1)
+                    total += labels.size(0)
+                    correct += (predictions == labels).sum().item()
 
-#                     loss = self.criterion(outputs, labels)
-#                     val_epoch_loss.append(loss.item())
-#                     valid_loss += loss.item()
+                    loss = self.criterion(outputs, labels)
+                    val_epoch_loss.append(loss.item())
+                    valid_loss += loss.item()
 
-#             _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, \
-#                 Validation Loss: {valid_loss / (len(val_loader) * self.num_crops):.5f}')
+            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, \
+                Validation Loss: {valid_loss / (len(val_loader) * self.num_crops):.5f}')
 
-#             val_loss_vals.append(sum(val_epoch_loss) / len(val_epoch_loss))
-#             val_accu_vals.append(100 * correct / total)
+            val_loss_vals.append(sum(val_epoch_loss) / len(val_epoch_loss))
+            val_accu_vals.append(100 * correct / total)
 
-#             # TODO: SAVE MODEL CHECKPOINT, EXCEPT THE LAST SOFTMAX LAYER
-#             if min_valid_loss > valid_loss:
-#                 _logger.info(f'🎯 CHECKPOINT: \
-#                     Validation Loss ({min_valid_loss / (len(val_loader) * self.num_crops):.5f} \
-#                         ==> {valid_loss / (len(val_loader) * self.num_crops):.5f})')
-#                 min_valid_loss = valid_loss
-#                 mixnet_s, _ = self.model.children()
-#                 torch.save(mixnet_s.state_dict(), best_model_path)
+            # TODO: SAVE MODEL CHECKPOINT, EXCEPT THE LAST SOFTMAX LAYER
+            if min_valid_loss > valid_loss:
+                _logger.info(f'🎯 CHECKPOINT: \
+                    Validation Loss ({min_valid_loss / (len(val_loader) * self.num_crops):.5f} \
+                        ==> {valid_loss / (len(val_loader) * self.num_crops):.5f})')
+                min_valid_loss = valid_loss
+                mixnet_s, _ = self.model.children()
+                torch.save(mixnet_s.state_dict(), best_model_path)
 
-#         return best_model_path
+        return best_model_path
