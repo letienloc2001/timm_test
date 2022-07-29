@@ -20,7 +20,7 @@ from .random_erasing import RandomErasing
 from .mixup import FastCollateMixup
 
 
-def fast_collate(batch):
+def fast_collate(batch): 
     """ A fast collation function optimized for uint8 images (np array or torch) and int64 targets (labels)"""
     assert isinstance(batch[0], tuple)
     batch_size = len(batch)
@@ -51,6 +51,23 @@ def fast_collate(batch):
         for i in range(batch_size):
             tensor[i].copy_(batch[i][0])
         return tensor, targets
+    elif isinstance(batch[0][0], list):
+        if isinstance(batch[0][0][0], torch.Tensor):
+            targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+            targets = torch.tensor([entry for entry in targets for _ in range(10)])
+            tensor = torch.zeros((batch_size*10, *batch[0][0][0].shape), dtype=torch.uint8)
+            for i in range(batch_size):
+                for j in range(10):
+                    tensor[i].copy_(batch[i][0][j])
+            return tensor, targets
+        elif isinstance(batch[0][0][0], np.ndarray):
+            targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
+            targets = torch.tensor([entry for entry in targets for _ in range(10)])
+            tensor = torch.zeros((batch_size*10, *batch[0][0][0].shape), dtype=torch.uint8)
+            for i in range(batch_size):
+                for j in range(10):
+                    tensor[i] += torch.from_numpy(batch[i][0][j])
+            return tensor, targets
     else:
         assert False
 
