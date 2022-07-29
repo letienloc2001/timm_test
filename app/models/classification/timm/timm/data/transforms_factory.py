@@ -160,7 +160,7 @@ def transforms_imagenet_eval(
 
     return transforms.Compose(tfl)
 
-def transform_customized_inference(
+def transforms_customized_inference(
         img_size=400,
         hflip=0.,
         vflip=0.,
@@ -238,6 +238,9 @@ def transform_customized_inference(
 
     return transforms.Compose(tfl)
 
+def transforms_customized_train():
+    pass
+
 def create_transform(
         input_size,
         is_training=False,
@@ -259,7 +262,8 @@ def create_transform(
         crop_pct=None,
         tf_preprocessing=False,
         separate=False,
-        is_anti_spoofing=False):
+        is_anti_spoofing=False,
+        ten_crop=False):
 
     if isinstance(input_size, (tuple, list)):
         img_size = input_size[-2:]
@@ -272,15 +276,24 @@ def create_transform(
         transform = TfPreprocessTransform(
             is_training=is_training, size=img_size, interpolation=interpolation)
     else:
-        if is_anti_spoofing:
+        if is_anti_spoofing and not is_training:
             assert not separate, "Separate transforms not supported for validation preprocessing"
-            transform = transform_customized_inference(
+            transform = transforms_customized_inference(
                 img_size,
                 interpolation=interpolation,
                 use_prefetcher=use_prefetcher,
                 mean=mean,
                 std=std,
                 crop_pct=crop_pct
+            )
+        elif is_anti_spoofing and is_training:
+            transform = transforms_customized_train(
+                # img_size,
+                # interpolation=interpolation,
+                # use_prefetcher=use_prefetcher,
+                # mean=mean,
+                # std=std,
+                # crop_pct=crop_pct
             )
         elif is_training and no_aug:
             assert not separate, "Cannot perform split augmentation with no_aug"
