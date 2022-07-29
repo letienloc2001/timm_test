@@ -1,0 +1,48 @@
+# Usage: pip install -r requirements.txt
+
+# Core AI - API requirements
+flask==2.1.2
+Pillow==9.1.1
+flask-sqlalchemy==2.5.1
+flask_migrate==3.1.0
+psycopg2-binary==2.9.3
+flask-jwt-extended==4.4.2
+python-dotenv==0.20.0
+flask-cors==3.0.10
+gunicorn==20.1.0
+
+# YOLOv5 requirements
+# Base ----------------------------------------
+matplotlib>=3.2.2
+numpy>=1.18.5
+opencv-python>=4.1.1
+PyYAML>=5.3.1
+requests>=2.23.0
+scipy>=1.4.1
+torch>=1.9.0
+torchvision>=0.10.0
+tqdm>=4.41.0
+protobuf<=3.20.1
+
+# Plotting ------------------------------------
+pandas>=1.1.4
+seaborn>=0.11.0
+
+# Extras --------------------------------------
+ipython
+psutil
+thop
+# albumentations>=1.0.3
+# pycocotools>=2.0  # COCO mAP
+# roboflow
+
+# Timm requirements
+# Model index --------------------------------
+model-index==0.1.10
+jinja2==3.0
+
+# Docs ----------------------------------------
+mkdocs
+mkdocs-material
+mdx_truly_sane_lists
+mkdocs-awesome-pages-plugin
