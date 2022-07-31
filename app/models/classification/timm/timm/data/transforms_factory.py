@@ -239,6 +239,102 @@ def transforms_customized_inference(
     return transforms.Compose(tfl)
 
 def transforms_customized_train():
+#     def transform_customized_train_val(
+#         img_size=400,
+#         hflip=None,
+#         vflip=None,
+#         color_jitter=None,
+#         auto_augment=None,
+#         ten_crop=True,
+#         interpolation='bilinear',
+#         use_prefetcher=False,
+#         mean=IMAGENET_DEFAULT_MEAN,
+#         std=IMAGENET_DEFAULT_STD,
+#         # re_prob=0.,
+#         # re_mode='const',
+#         # re_count=1,
+#         # re_num_splits=0,
+#         crop_pct=0.4,
+# ):
+#     if interpolation == 'random':
+#         interpolation = 'bilinear'
+
+#     if isinstance(img_size, (tuple, list)):
+#         assert len(img_size) == 2
+#         scale_size = tuple([int(x / crop_pct) for x in img_size])
+#         crop_size = img_size
+#     else:
+#         crop_size = (img_size, img_size)
+#         size = int(math.floor(img_size / crop_pct))
+#         scale_size = (size, size)
+
+#     tfl = [transforms.Resize(size=scale_size, interpolation=str_to_interp_mode(interpolation))]
+
+#     if hflip > 0.:
+#         tfl += [transforms.RandomHorizontalFlip(p=hflip)]
+#     if vflip > 0.:
+#         tfl += [transforms.RandomVerticalFlip(p=vflip)]
+
+#     if auto_augment:
+#         assert isinstance(auto_augment, str)
+#         if isinstance(img_size, (tuple, list)):
+#             img_size_min = min(img_size)
+#         else:
+#             img_size_min = img_size
+#         aa_params = dict(
+#             translate_const=int(img_size_min * 0.45),
+#             img_mean=tuple([min(255, round(255 * x)) for x in mean]),
+#         )
+#         if interpolation and interpolation != 'random':
+#             aa_params['interpolation'] = str_to_pil_interp(interpolation)
+#         if auto_augment.startswith('rand'):
+#             tfl += [rand_augment_transform(auto_augment, aa_params)]
+#         elif auto_augment.startswith('augmix'):
+#             aa_params['translate_pct'] = 0.3
+#             tfl += [augment_and_mix_transform(auto_augment, aa_params)]
+#         else:
+#             tfl += [auto_augment_transform(auto_augment, aa_params)]
+#     elif color_jitter is not None:
+#         # color jitter is enabled when not using AA
+#         if isinstance(color_jitter, (list, tuple)):
+#             # color jitter should be a 3-tuple/list if spec brightness/contrast/saturation
+#             # or 4 if also augmenting hue
+#             assert len(color_jitter) in (3, 4)
+#         else:
+#             # if it's a scalar, duplicate for brightness, contrast, and saturation, no hue
+#             color_jitter = (float(color_jitter),) * 3
+#         tfl += [transforms.ColorJitter(*color_jitter)]
+
+#     if ten_crop:
+#         tfl += [transforms.TenCrop(size=crop_size)]
+#         if use_prefetcher:
+#             # prefetcher and collate will handle tensor conversion and norm
+#             tfl += [transforms.Lambda(lambda crops: [ToNumpy()(crop) for crop in crops])]
+#         else:
+#             tfl += [
+#                 transforms.Lambda(lambda crops: [transforms.ToTensor()(crop) for crop in crops]),
+#                 transforms.Lambda(lambda crops: [transforms.Normalize(mean=torch.tensor(mean), std=torch.tensor(std))(crop) for crop in crops]),
+#                 transforms.Lambda(lambda crops: torch.stack(crops)),
+#             ]
+#             # if re_prob > 0.:
+#             #     tfl += [
+#             #         RandomErasing(re_prob, mode=re_mode, max_count=re_count, num_splits=re_num_splits, device='cpu')]
+#     else:
+#         tfl += [transforms.CenterCrop(size=crop_size)]
+#         if use_prefetcher:
+#             # prefetcher and collate will handle tensor conversion and norm
+#             tfl += [ToNumpy()]
+#         else:
+#             tfl += [
+#                 transforms.ToTensor(),
+#                 transforms.Normalize(
+#                     mean=torch.tensor(mean),
+#                     std=torch.tensor(std))
+#             ]
+#             # if re_prob > 0.:
+#             #     tfl += [
+#             #         RandomErasing(re_prob, mode=re_mode, max_count=re_count, num_splits=re_num_splits, device='cpu')]
+#     return transforms.Compose(tfl)
     pass
 
 def create_transform(
@@ -287,14 +383,22 @@ def create_transform(
                 crop_pct=crop_pct
             )
         elif is_anti_spoofing and is_training:
-            transform = transforms_customized_train(
-                # img_size,
-                # interpolation=interpolation,
-                # use_prefetcher=use_prefetcher,
-                # mean=mean,
-                # std=std,
-                # crop_pct=crop_pct
+            transform = transforms_customized_inference(
+                img_size,
+                interpolation=interpolation,
+                use_prefetcher=use_prefetcher,
+                mean=mean,
+                std=std,
+                crop_pct=crop_pct
             )
+            # transform = transforms_customized_train(
+            #     # img_size,
+            #     # interpolation=interpolation,
+            #     # use_prefetcher=use_prefetcher,
+            #     # mean=mean,
+            #     # std=std,
+            #     # crop_pct=crop_pct
+            # )
         elif is_training and no_aug:
             assert not separate, "Cannot perform split augmentation with no_aug"
             transform = transforms_noaug_train(
