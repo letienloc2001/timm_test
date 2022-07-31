@@ -25,11 +25,6 @@ def fast_collate(batch):
     assert isinstance(batch[0], tuple)
     batch_size = len(batch)
 
-    print('1', type(batch))
-    print('2', type(batch[0]))
-    print('3', type(batch[0][0]))
-    print('4', type(batch[0][0][0]))
-
     if isinstance(batch[0][0], tuple):
         # This branch 'deinterleaves' and flattens tuples of input tensors into one tensor ordered by position
         # such that all tuple of position n will end up in a torch.split(tensor, batch_size) in nth position
