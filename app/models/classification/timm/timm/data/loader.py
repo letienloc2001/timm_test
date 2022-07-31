@@ -24,6 +24,12 @@ def fast_collate(batch):
     """ A fast collation function optimized for uint8 images (np array or torch) and int64 targets (labels)"""
     assert isinstance(batch[0], tuple)
     batch_size = len(batch)
+
+    print(type(batch))
+    print(type(batch[0]))
+    print(type(batch[0][0]))
+    print(type(batch[0][0][0]))
+
     if isinstance(batch[0][0], tuple):
         # This branch 'deinterleaves' and flattens tuples of input tensors into one tensor ordered by position
         # such that all tuple of position n will end up in a torch.split(tensor, batch_size) in nth position

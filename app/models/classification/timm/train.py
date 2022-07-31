@@ -739,6 +739,10 @@ def train_one_epoch(
         end = time.time()
         last_idx = len(loader) * (10 if args.ten_crop else 1) - 1
         num_updates = epoch * len(loader) * (10 if args.ten_crop else 1)
+
+        _logger.info(str(args.ten_crop) + str(args.workers))
+
+        
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
             data_time_m.update(time.time() - end)
