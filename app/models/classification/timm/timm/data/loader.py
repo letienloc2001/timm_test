@@ -53,7 +53,7 @@ def fast_collate(batch):
     elif isinstance(batch[0][0], torch.Tensor):
         targets = torch.tensor([b[1] for b in batch], dtype=torch.int64)
         assert len(targets) == batch_size
-        tensor = torch.zeros((batch_size, *batch[0][0].shape), dtype=torch.uint8)
+        tensor = torch.zeros((batch_size, *batch[0][0s].shape), dtype=torch.uint8)
         for i in range(batch_size):
             tensor[i].copy_(batch[i][0])
         return tensor, targets
