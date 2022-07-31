@@ -743,6 +743,8 @@ def train_one_epoch(
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
             data_time_m.update(time.time() - end)
+            print('input:', input.shape)
+            print('target:', target.shape)
             if args.ten_crop:  # todo: use ten crop augmentation
 
                 # BEFORE
