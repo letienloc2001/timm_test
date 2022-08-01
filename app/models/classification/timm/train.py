@@ -750,10 +750,10 @@ def train_one_epoch(
                 # BEFORE
                 # input.shape  = batch_size, 10, (3,400,400)
                 # target.shape = batch_size
-                input = torch.flatten(input, start_dim=0, end_dim=1)
-                target = torch.Tensor([entry for entry in target for _ in range(10)])
-                print('*input:', input.shape)
-                print('*target:', target.shape)
+                # input = torch.flatten(input, start_dim=0, end_dim=1)
+                # target = torch.Tensor([entry for entry in target for _ in range(10)])
+                # print('*input:', input.shape)
+                # print('*target:', target.shape)
                 # AFTER
                 # input.shape  = 10xbatch_size, (3,400,400)
                 # target.shape = 10xbatch_size
