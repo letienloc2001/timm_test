@@ -728,10 +728,8 @@ def train_one_epoch(
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
             data_time_m.update(time.time() - end)
-            print('input:', input.shape)
-            print('target:', target.shape)
-            if args.ten_crop:  # todo: use ten crop augmentation
 
+            if args.ten_crop:  # todo: use ten crop augmentation
                 for crop_idx in range(10):
                     start_idx = args.batch_size * crop_idx
                     end_idx = start_idx + args.batch_size
@@ -754,36 +752,30 @@ def train_one_epoch(
 
                     optimizer.zero_grad()
 
-                    # NOTE: DON'T USE BY DEFAULT
                     if loss_scaler is not None:
                         loss_scaler(
                             loss, optimizer,
                             clip_grad=args.clip_grad, clip_mode=args.clip_mode,
                             parameters=model_parameters(model, exclude_head='agc' in args.clip_mode),
                             create_graph=second_order)
-                    # END NOTE:
 
                     else:
                         loss.backward(create_graph=second_order)
 
-                        # NOTE: DON'T USE BY DEFAULT
                         if args.clip_grad is not None:
                             utils.dispatch_clip_grad(
                                 model_parameters(model, exclude_head='agc' in args.clip_mode),
                                 value=args.clip_grad, mode=args.clip_mode)
-                        # END NOTE:
 
                         optimizer.step()
 
-                    # NOTE: DON'T USE BY DEFAULT
                     if model_ema is not None:
                         model_ema.update(model)
-                    # END NOTE:
 
                     torch.cuda.synchronize()
                     num_updates += 1
 
-            else:  # NOTE: no ten crop augmentation
+            else:  # no ten crop augmentation
                 if not args.prefetcher:
                     input, target = input.cuda(), target.cuda()
                     if mixup_fn is not None:
@@ -886,7 +878,7 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
-            if args.ten_crop:  # NOTE: use ten crop augmentation
+            if args.ten_crop:  # use ten crop augmentation
                 for crop_idx in range(10):
                     start_idx = args.batch_size * crop_idx
                     end_idx = start_idx + args.batch_size
@@ -926,7 +918,7 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
                     top1_m.update(acc1.item(), output.size(0))
                     top5_m.update(acc5.item(), output.size(0))
 
-            else:  # NOTE: no ten crop augumentation
+            else:  # no ten crop augumentation
                 if not args.prefetcher:
                     input = input.cuda()
                     target = target.cuda()
