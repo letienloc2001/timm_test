@@ -706,9 +706,7 @@ def train_one_epoch(
 
     end = time.time()
     last_idx = len(loader) - 1
-    num_updates = epoch * len(loader) * (10 if ten_crop else 1)
-
-    # 10 batch * 8 - 1 (0..79)
+    num_updates = epoch * len(loader)
     for batch_idx, (input, target) in enumerate(loader):
         last_batch = batch_idx == last_idx
         data_time_m.update(time.time() - end)
