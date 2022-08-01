@@ -331,7 +331,7 @@ def train(model, dataset, configuration):
     args, args_text = _parse_args(configuration=configuration, dataset=dataset)
     args.prefetcher = not args.no_prefetcher
 
-    # TODO: Set up
+    #  Set up
     args.distributed = False
     if 'WORLD_SIZE' in os.environ:
         args.distributed = int(os.environ['WORLD_SIZE']) > 1
@@ -350,7 +350,6 @@ def train(model, dataset, configuration):
         _logger.info('Training with a single process on 1 GPUs.')
     assert args.rank >= 0
 
-    # NOTE: DON'T USE BY DEFAULT
     if args.rank == 0 and args.log_wandb:
         if has_wandb:
             wandb.init(project=args.experiment, config=args)
@@ -374,7 +373,6 @@ def train(model, dataset, configuration):
     elif args.apex_amp or args.native_amp:
         _logger.warning("Neither APEX or native Torch AMP is available, using float32. "
                         "Install NVIDA apex or upgrade to PyTorch 1.6")
-    # END NOTE
 
     utils.random_seed(args.seed, args.rank)
 
@@ -397,10 +395,8 @@ def train(model, dataset, configuration):
         assert hasattr(model, 'num_classes'), 'Model must have `num_classes` attr if not set on cmd line/config.'
         args.num_classes = model.num_classes  # FIXME handle model default vs config num_classes more elegantly
 
-    # NOTE: DON'T USE BY DEFAULT
     if args.grad_checkpointing:
         model.set_grad_checkpointing(enable=True)
-    # END NOTE
 
     if args.local_rank == 0:
         _logger.info(
@@ -408,7 +404,6 @@ def train(model, dataset, configuration):
 
     data_config = resolve_data_config(vars(args), model=model, verbose=args.local_rank == 0)
 
-    # NOTE: DON'T USE BY DEFAULT
     # setup augmentation batch splits for contrastive loss or split bn
     num_aug_splits = 0
     if args.aug_splits > 0:
@@ -419,12 +414,10 @@ def train(model, dataset, configuration):
     if args.split_bn:
         assert num_aug_splits > 1 or args.resplit
         model = convert_splitbn_model(model, max(num_aug_splits, 2))
-    # END NOTE
 
     # move model to GPU, enable channels last layout if set
     model.cuda()
 
-    # NOTE: DON'T USE BY DEFAULT
     if args.channels_last:
         model = model.to(memory_format=torch.channels_last)
 
@@ -448,12 +441,11 @@ def train(model, dataset, configuration):
     if args.aot_autograd:
         assert has_functorch, "functorch is needed for --aot-autograd"
         model = memory_efficient_fusion(model)
-    # END NOTE
 
-    # TODO: CREATE OPTIMMIZER
+    # CREATE OPTIMMIZER
     optimizer = create_optimizer_v2(model, **optimizer_kwargs(cfg=args))
 
-    # NOTE: DON'T USE BY DEFAULT
+
     # setup automatic mixed-precision (AMP) loss scaling and op casting
     amp_autocast = suppress  # do nothing
     loss_scaler = None
@@ -500,13 +492,11 @@ def train(model, dataset, configuration):
             if args.local_rank == 0:
                 _logger.info("Using native Torch DistributedDataParallel.")
             model = NativeDDP(model, device_ids=[args.local_rank], broadcast_buffers=not args.no_ddp_bb)
-    # NOTE: EMA model does not need to be wrapped by DDP
-    # END NOTE
+    # EMA model does not need to be wrapped by DDP
 
     # setup learning rate schedule and starting epoch
     lr_scheduler, num_epochs = create_scheduler(args, optimizer)
 
-    # NOTE: DON'T USE BY DEFAULT
     start_epoch = 0
     if args.start_epoch is not None:
         # a specified start_epoch will always override the resume epoch
@@ -516,12 +506,11 @@ def train(model, dataset, configuration):
         start_epoch = resume_epoch
     if lr_scheduler is not None and start_epoch > 0:
         lr_scheduler.step(start_epoch)
-    # END NOTE
 
     if args.local_rank == 0:
         _logger.info('Scheduled epochs: {}'.format(num_epochs))
 
-    # TODO: CREATE TRAIN AND EVAL DATASETS
+    # CREATE TRAIN AND EVAL DATASETS
     dataset_train = create_dataset(
         args.dataset, root=args.data_dir, split=args.train_split, is_training=True,
         class_map=args.class_map,
@@ -535,7 +524,6 @@ def train(model, dataset, configuration):
         download=args.dataset_download,
         batch_size=args.batch_size)
 
-    # NOTE: DON'T USE BY DEFAULT
     # setup mixup / cutmix
     collate_fn = None
     mixup_fn = None
@@ -554,7 +542,6 @@ def train(model, dataset, configuration):
     # wrap dataset in AugMix helper
     if num_aug_splits > 1:
         dataset_train = AugMixDataset(dataset_train, num_splits=num_aug_splits)
-    # END NOTE
 
     # create data loaders w/ augmentation pipeline
     train_interpolation = args.train_interpolation
@@ -627,7 +614,6 @@ def train(model, dataset, configuration):
         is_anti_spoofing=True,
     )
 
-    # NOTE: DON'T USE BY DEFAULT
     # setup loss function
     if args.jsd_loss:
         assert num_aug_splits > 1  # JSD only valid with aug splits set
@@ -643,7 +629,6 @@ def train(model, dataset, configuration):
             train_loss_fn = BinaryCrossEntropy(smoothing=args.smoothing, target_threshold=args.bce_target_thresh)
         else:
             train_loss_fn = LabelSmoothingCrossEntropy(smoothing=args.smoothing)
-    # END NOTE
     else:
         train_loss_fn = nn.CrossEntropyLoss()
     train_loss_fn = train_loss_fn.cuda()
@@ -747,25 +732,11 @@ def train_one_epoch(
             print('target:', target.shape)
             if args.ten_crop:  # todo: use ten crop augmentation
 
-                # BEFORE
-                # input.shape  = batch_size, 10, (3,400,400)
-                # target.shape = batch_size
-                # input = torch.flatten(input, start_dim=0, end_dim=1)
-                # target = torch.Tensor([entry for entry in target for _ in range(10)])
-                # print('*input:', input.shape)
-                # print('*target:', target.shape)
-                # AFTER
-                # input.shape  = 10xbatch_size, (3,400,400)
-                # target.shape = 10xbatch_size
-
                 for crop_idx in range(10):
                     start_idx = args.batch_size * crop_idx
                     end_idx = start_idx + args.batch_size
                     crop_input = input[start_idx: end_idx:]
                     crop_target = target[start_idx: end_idx:]
-                    # CROP
-                    # crop_input.shape  = batch_size, (3,400,400)
-                    # crop_target.shape = batch_size
 
                     if not args.prefetcher:
                         crop_input, crop_target = crop_input.cuda(), crop_target.cuda()
@@ -812,9 +783,7 @@ def train_one_epoch(
                     torch.cuda.synchronize()
                     num_updates += 1
 
-            else:  # todo: no ten crop augmentation
-                # input.shape  = batch_size x (3,400,400)
-                # target.shape = batch_size
+            else:  # NOTE: no ten crop augmentation
                 if not args.prefetcher:
                     input, target = input.cuda(), target.cuda()
                     if mixup_fn is not None:
@@ -830,28 +799,25 @@ def train_one_epoch(
                     losses_m.update(loss.item(), input.size(0))
 
                 optimizer.zero_grad()
-                # NOTE: DON'T USE BY DEFAULT
+
                 if loss_scaler is not None:
                     loss_scaler(
                         loss, optimizer,
                         clip_grad=args.clip_grad, clip_mode=args.clip_mode,
                         parameters=model_parameters(model, exclude_head='agc' in args.clip_mode),
                         create_graph=second_order)
-                # END NOTE:
+
                 else:
                     loss.backward(create_graph=second_order)
-                    # NOTE: DON'T USE BY DEFAULT
                     if args.clip_grad is not None:
                         utils.dispatch_clip_grad(
                             model_parameters(model, exclude_head='agc' in args.clip_mode),
                             value=args.clip_grad, mode=args.clip_mode)
-                    # END NOTE:
+
                     optimizer.step()
 
-                # NOTE: DON'T USE BY DEFAULT
                 if model_ema is not None:
                     model_ema.update(model)
-                # END NOTE:
 
                 torch.cuda.synchronize()
                 num_updates += 1
@@ -920,23 +886,13 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
-            if args.ten_crop:  # todo: use ten crop augmentation
-                # BEFORE
-                # input.shape  = batch_size, 10, (3,400,400)
-                # # target.shape = batch_size
-                # input = torch.flatten(input, start_dim=0, end_dim=1)
-                # target = torch.Tensor([entry for entry in target for _ in range(10)])
-                # AFTER
-                # input.shape  = 10xbatch_size, (3,400,400)
-                # target.shape = 10xbatch_size
+            if args.ten_crop:  # NOTE: use ten crop augmentation
                 for crop_idx in range(10):
                     start_idx = args.batch_size * crop_idx
                     end_idx = start_idx + args.batch_size
                     crop_input = input[start_idx: end_idx:]
                     crop_target = target[start_idx: end_idx:]
-                    # CROP
-                    # crop_input.shape  = batch_size, (3,400,400)
-                    # crop_target.shape = batch_size
+                    
                     if not args.prefetcher:
                         crop_input = crop_input.cuda()
                         crop_target = crop_target.cuda()
@@ -948,13 +904,11 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
                     if isinstance(output, (tuple, list)):
                         output = output[0]
 
-                    # NOTE: DON'T USE BY DEFAULT
                     # augmentation reduction
                     reduce_factor = args.tta
                     if reduce_factor > 1:
                         output = output.unfold(0, reduce_factor, reduce_factor).mean(dim=2)
                         crop_target = crop_target[0:crop_target.size(0):reduce_factor]
-                    # END NOTE
 
                     loss = loss_fn(output, crop_target)
                     acc1, acc5 = utils.accuracy(output, crop_target, topk=(1, 5))
@@ -972,9 +926,7 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
                     top1_m.update(acc1.item(), output.size(0))
                     top5_m.update(acc5.item(), output.size(0))
 
-            else:  # todo: no ten crop augumentation
-                # input.shape  = batch_size x (3,400,400)
-                # target.shape = batch_size
+            else:  # NOTE: no ten crop augumentation
                 if not args.prefetcher:
                     input = input.cuda()
                     target = target.cuda()
@@ -986,13 +938,11 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
                 if isinstance(output, (tuple, list)):
                     output = output[0]
 
-                # NOTE: DON'T USE BY DEFAULT
                 # augmentation reduction
                 reduce_factor = args.tta
                 if reduce_factor > 1:
                     output = output.unfold(0, reduce_factor, reduce_factor).mean(dim=2)
                     target = target[0:target.size(0):reduce_factor]
-                # END NOTE
 
                 loss = loss_fn(output, target)
                 acc1, acc5 = utils.accuracy(output, target, topk=(1, 5))
