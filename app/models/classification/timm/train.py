@@ -923,9 +923,9 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
             if args.ten_crop:  # todo: use ten crop augmentation
                 # BEFORE
                 # input.shape  = batch_size, 10, (3,400,400)
-                # target.shape = batch_size
-                input = torch.flatten(input, start_dim=0, end_dim=1)
-                target = torch.Tensor([entry for entry in target for _ in range(10)])
+                # # target.shape = batch_size
+                # input = torch.flatten(input, start_dim=0, end_dim=1)
+                # target = torch.Tensor([entry for entry in target for _ in range(10)])
                 # AFTER
                 # input.shape  = 10xbatch_size, (3,400,400)
                 # target.shape = 10xbatch_size
