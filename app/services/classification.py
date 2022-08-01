@@ -41,10 +41,10 @@ class Classification:
 			cfg = yaml.safe_load(f)
 
 		anti_spoofing_model = Trainer(model=self.model.model,
-									batch_size=cfg['batch_size'],
-									lr=cfg['lr'],
-									weight_decay=cfg['weight_decay'],
-									momentum=cfg['momentum'])
+													batch_size=cfg['batch_size'],
+													lr=cfg['lr'],
+													weight_decay=cfg['weight_decay'],
+													momentum=cfg['momentum'])
 
 		best_model_path = anti_spoofing_model.train(data_set, cfg['epochs'], cfg['outpath'])
   

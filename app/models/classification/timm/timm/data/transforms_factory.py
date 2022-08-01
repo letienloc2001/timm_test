@@ -323,7 +323,7 @@ def transforms_customized_train(
                     mean=torch.tensor(mean),
                     std=torch.tensor(std))
             ]
-            
+
     return transforms.Compose(tfl)
 
 def create_transform(
