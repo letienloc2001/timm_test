@@ -722,14 +722,14 @@ def train_one_epoch(
         model.train()
 
         end = time.time()
-        last_idx = len(loader) * (10 if args.ten_crop else 1) - 1
-        num_updates = epoch * len(loader) * (10 if args.ten_crop else 1)
+        last_idx = len(loader) * (10 if ten_crop else 1) - 1
+        num_updates = epoch * len(loader) * (10 if ten_crop else 1)
         
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
             data_time_m.update(time.time() - end)
 
-            if args.ten_crop:  # todo: use ten crop augmentation
+            if ten_crop:  # todo: use ten crop augmentation
                 for crop_idx in range(10):
                     start_idx = args.batch_size * crop_idx
                     end_idx = start_idx + args.batch_size
@@ -874,11 +874,11 @@ def validate(model, loader, loss_fn, args, ten_crop=False, amp_autocast=suppress
     model.eval()
 
     end = time.time()
-    last_idx = len(loader) * (10 if args.ten_crop else 1) - 1
+    last_idx = len(loader) * (10 if ten_crop else 1) - 1
     with torch.no_grad():
         for batch_idx, (input, target) in enumerate(loader):
             last_batch = batch_idx == last_idx
-            if args.ten_crop:  # use ten crop augmentation
+            if ten_crop:  # use ten crop augmentation
                 for crop_idx in range(10):
                     start_idx = args.batch_size * crop_idx
                     end_idx = start_idx + args.batch_size
