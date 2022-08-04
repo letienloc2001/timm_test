@@ -1005,7 +1005,7 @@ class Trainer:
 
             self.model.train()
             for i, (images, labels) in enumerate(train_loader):
-                progressing_pct = int(100*i/len(train_loader)/2
+                progressing_pct = int(100*i/len(train_loader))/2
                 print('\r', end='')
                 print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(train_loader):.2f} %', end='')
                 crop_list = images.tolist()
@@ -1039,7 +1039,7 @@ class Trainer:
 
             self.model.eval()
             for i, (images, labels) in enumerate(val_loader):
-                progressing_pct = int(100*i/len(val_loader)/2
+                progressing_pct = int(100*i/len(val_loader))/2
                 print('\r', end='')
                 print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(val_loader):.2f} %', end='')
 
