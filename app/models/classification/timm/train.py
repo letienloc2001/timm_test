@@ -1005,7 +1005,7 @@ class Trainer:
         _logger.info('🚀 START TRAINING ...')
 
         for epoch in range(num_epochs):
-            _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
+            print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
 
             # TRAINING Process
             train_loss = 0.0
@@ -1034,7 +1034,7 @@ class Trainer:
                     optimizer.step()
                     train_loss += loss.item()
             print('\r', end='')
-            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
+            print(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
             # VALIDATION Process
             valid_loss = 0.0
@@ -1058,16 +1058,16 @@ class Trainer:
                 loss = criterion(outputs, labels)
                 valid_loss += loss.item()
             print('\r', end='')
-            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
+            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
             torch.save(mixnet_s.state_dict(), self.last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
+                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
         
-        _logger.info(f'🚀 Best model: {best_model_path}')
+        print(f'🚀 Best model: {best_model_path}')
         return best_model_path
