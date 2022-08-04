@@ -1002,7 +1002,7 @@ class Trainer:
 
         criterion = torch.nn.CrossEntropyLoss()
 
-        _logger.info('🚀 START TRAINING ...')
+        print('🚀 START TRAINING ...')
 
         for epoch in range(num_epochs):
             print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
