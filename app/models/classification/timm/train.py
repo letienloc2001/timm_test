@@ -987,7 +987,7 @@ class Trainer:
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
 
-        _logger.info('🚀 START TRAINING ...')
+        print('🚀 START TRAINING ...')
 
         train_loss_vals = []
         val_loss_vals = []
@@ -995,7 +995,7 @@ class Trainer:
         val_accu_vals = []
 
         for epoch in range(num_epochs):
-            _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
+            print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
 
             # TRAINING Process
             train_loss = 0.0
@@ -1005,8 +1005,9 @@ class Trainer:
 
             self.model.train()
             for i, (images, labels) in enumerate(train_loader):
-                _logger.info('\r', end='')
-                _logger.info(f'{100*i/len(train_loader):.2f} % ' + '-'*int(100*i/len(train_loader)), end='')
+                progressing_pct = int(100*i/len(train_loader)/2
+                print('\r', end='')
+                print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(train_loader):.2f} %', end='')
                 crop_list = images.tolist()
                 for crop_idx in range(10):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -1024,8 +1025,8 @@ class Trainer:
                     train_epoch_loss.append(loss.item())
                     self.optimizer.step()
                     train_loss += loss.item()
-            _logger.info('\r', end='')
-            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
+            print('\r', end='')
+            print(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
             train_loss_vals.append(sum(train_epoch_loss) / len(train_epoch_loss))
             train_accu_vals.append(100 * correct / total)
@@ -1038,8 +1039,9 @@ class Trainer:
 
             self.model.eval()
             for i, (images, labels) in enumerate(val_loader):
-                _logger.info('\r', end='')
-                _logger.info(f'{100*i/len(train_loader):.2f} % ' + '-'*int(100*i/len(train_loader)), end='')
+                progressing_pct = int(100*i/len(val_loader)/2
+                print('\r', end='')
+                print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(val_loader):.2f} %', end='')
 
                 images, labels = images.to(self.device), labels.to(self.device)
 
@@ -1053,8 +1055,8 @@ class Trainer:
                 val_epoch_loss.append(loss.item())
                 valid_loss += loss.item()
 
-            _logger.info('\r', end='')
-            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
+            print('\r', end='')
+            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             val_loss_vals.append(sum(val_epoch_loss) / len(val_epoch_loss))
             val_accu_vals.append(100 * correct / total)
@@ -1064,7 +1066,7 @@ class Trainer:
             torch.save(mixnet_s.state_dict(), last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
+                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
         
