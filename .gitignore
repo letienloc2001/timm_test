@@ -381,6 +381,5 @@ output/
 *.pth
 *.pt
 *.gz
-Untitled.ipynb
-Testing notebook.ipynb
+test.ipynb
 test.py
