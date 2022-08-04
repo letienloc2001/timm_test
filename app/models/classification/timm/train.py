@@ -967,8 +967,9 @@ class Trainer:
         model = create_model(model_name=self.model_name, 
                              num_classes=self.num_classes, 
                              checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path)
+        model = nn.Sequential(model, nn.Softmax(dim=1))                    
         model.to(self.device)
-        
+
         train_path = os.path.join(data_set, 'train')
         val_path = os.path.join(data_set, 'validation')
 
