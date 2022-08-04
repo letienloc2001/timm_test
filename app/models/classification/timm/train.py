@@ -988,7 +988,7 @@ class Trainer:
         ])
 
         train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=transform_train)
-        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_test)
+        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_train)
 
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True)
@@ -1046,26 +1046,29 @@ class Trainer:
                 progressing_pct = int(100*i/len(val_loader)/2)
                 print('\r', end='')
                 print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(val_loader):.2f} %', end='')
+                for crop_idx in range(10):
+                    cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
 
-                images, labels = images.to(self.device), labels.to(self.device)
+                    cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
+                # images, labels = images.to(self.device), labels.to(self.device)
 
-                outputs = model(images)
+                    outputs = model(cropped_images)
 
-                _, predictions = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predictions == labels).sum().item()
+                    _, predictions = torch.max(outputs.data, 1)
+                    total += labels.size(0)
+                    correct += (predictions == labels).sum().item()
 
-                loss = criterion(outputs, labels)
-                valid_loss += loss.item()
+                    loss = criterion(outputs, labels)
+                    valid_loss += loss.item()
             print('\r', end='')
-            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
+            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader)/10:.5f}')
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
             torch.save(mixnet_s.state_dict(), self.last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
+                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader)/10:.5f} ==> {valid_loss / len(val_loader)/10:.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
         
