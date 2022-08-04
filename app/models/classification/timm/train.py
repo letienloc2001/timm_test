@@ -937,15 +937,6 @@ class Trainer:
 
         self.device = torch.device(cuda_device if torch.cuda.is_available() else 'cpu')
         self.batch_size = batch_size
-        self.num_crops = 10
-        self.transform = t.Compose([
-            t.Resize(size=(400, 400)),
-            t.TenCrop(size=(224, 224)),
-            t.Lambda(lambda crops: [t.ToTensor()(crop) for crop in crops]),
-            t.Lambda(lambda crops: [t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))(crop) for crop in
-                                    crops]),
-            t.Lambda(lambda crops: torch.stack(crops))
-        ])
         self.model = torch.nn.Sequential(model, torch.nn.Softmax(dim=1))
         self.model.to(self.device)
         self.optimizer = torch.optim.SGD(
@@ -976,8 +967,22 @@ class Trainer:
         train_path = os.path.join(data_set, 'train')
         val_path = os.path.join(data_set, 'validation')
 
-        train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=self.transform)
-        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=self.transform)
+        transform_train = t.Compose([
+            t.Resize(size=(400, 400)),
+            t.TenCrop(size=(224, 224)),
+            t.Lambda(lambda crops: [t.ToTensor()(crop) for crop in crops]),
+            t.Lambda(lambda crops: [t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))(crop) for crop in crops]),
+            t.Lambda(lambda crops: torch.stack(crops))
+        ])
+        transform_test = t.Compose([
+            t.Resize(size=(400, 400)),
+            t.CenterCrop(size=(224, 224)),
+            t.ToTensor(),
+            t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
+        ])
+
+        train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=transform_train)
+        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_test)
 
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
@@ -999,11 +1004,12 @@ class Trainer:
             train_epoch_loss = []
 
             self.model.train()
-            for _, (images, labels) in enumerate(train_loader):
+            for i, (images, labels) in enumerate(train_loader):
+                _logger.info('\r', end='')
+                _logger.info(f'{100*i/len(train_loader):.2f} % ' + '-'*int(100*i/len(train_loader)), end='')
                 crop_list = images.tolist()
-                for crop_idx in range(self.num_crops):
-                    cropped_images = torch.Tensor(
-                        [crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
+                for crop_idx in range(10):
+                    cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
 
                     cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
 
@@ -1018,9 +1024,8 @@ class Trainer:
                     train_epoch_loss.append(loss.item())
                     self.optimizer.step()
                     train_loss += loss.item()
-
-            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, \
-                Training Loss  : {train_loss / (len(train_loader) * self.num_crops):.5f}')
+            _logger.info('\r', end='')
+            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
             train_loss_vals.append(sum(train_epoch_loss) / len(train_epoch_loss))
             train_accu_vals.append(100 * correct / total)
@@ -1032,25 +1037,24 @@ class Trainer:
             val_epoch_loss = []
 
             self.model.eval()
-            for _, (images, labels) in enumerate(val_loader):
-                crop_list = images.tolist()
-                for crop_idx in range(self.num_crops):
-                    cropped_images = torch.Tensor(
-                        [crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
-                    cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
+            for i, (images, labels) in enumerate(val_loader):
+                _logger.info('\r', end='')
+                _logger.info(f'{100*i/len(train_loader):.2f} % ' + '-'*int(100*i/len(train_loader)), end='')
 
-                    outputs = self.model(cropped_images)
+                images, labels = images.to(self.device), labels.to(self.device)
 
-                    _, predictions = torch.max(outputs.data, 1)
-                    total += labels.size(0)
-                    correct += (predictions == labels).sum().item()
+                outputs = self.model(images)
 
-                    loss = self.criterion(outputs, labels)
-                    val_epoch_loss.append(loss.item())
-                    valid_loss += loss.item()
+                _, predictions = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predictions == labels).sum().item()
 
-            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, \
-                Validation Loss: {valid_loss / (len(val_loader) * self.num_crops):.5f}')
+                loss = self.criterion(outputs, labels)
+                val_epoch_loss.append(loss.item())
+                valid_loss += loss.item()
+
+            _logger.info('\r', end='')
+            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             val_loss_vals.append(sum(val_epoch_loss) / len(val_epoch_loss))
             val_accu_vals.append(100 * correct / total)
@@ -1060,7 +1064,7 @@ class Trainer:
             torch.save(mixnet_s.state_dict(), last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / (len(val_loader) * self.num_crops):.5f} ==> {valid_loss / (len(val_loader) * self.num_crops):.5f})')
+                _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
         
