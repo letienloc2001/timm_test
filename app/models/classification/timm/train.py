@@ -982,17 +982,12 @@ class Trainer:
         ])
 
         train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=transform_train)
-        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_test)
+        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_train)
 
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
 
         print('🚀 START TRAINING ...')
-
-        train_loss_vals = []
-        val_loss_vals = []
-        train_accu_vals = []
-        val_accu_vals = []
 
         for epoch in range(num_epochs):
             print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
@@ -1001,7 +996,6 @@ class Trainer:
             train_loss = 0.0
             correct = 0
             total = 0
-            train_epoch_loss = []
 
             self.model.train()
             for i, (images, labels) in enumerate(train_loader):
@@ -1022,44 +1016,38 @@ class Trainer:
 
                     loss = self.criterion(outputs, labels)
                     loss.backward()
-                    train_epoch_loss.append(loss.item())
                     self.optimizer.step()
                     train_loss += loss.item()
             print('\r', end='')
             print(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
-            train_loss_vals.append(sum(train_epoch_loss) / len(train_epoch_loss))
-            train_accu_vals.append(100 * correct / total)
-
             # VALIDATION Process
             valid_loss = 0.0
             correct = 0
             total = 0
-            val_epoch_loss = []
 
             self.model.eval()
             for i, (images, labels) in enumerate(val_loader):
                 progressing_pct = int(100*i/len(val_loader)/2)
                 print('\r', end='')
                 print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(val_loader):.2f} %', end='')
+                crop_list = images.tolist()
+                for crop_idx in range(10):
+                    cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
 
-                images, labels = images.to(self.device), labels.to(self.device)
+                    cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
 
-                outputs = self.model(images)
+                    outputs = self.model(cropped_images)
 
-                _, predictions = torch.max(outputs.data, 1)
-                total += labels.size(0)
-                correct += (predictions == labels).sum().item()
+                    _, predictions = torch.max(outputs.data, 1)
+                    total += labels.size(0)
+                    correct += (predictions == labels).sum().item()
 
-                loss = self.criterion(outputs, labels)
-                val_epoch_loss.append(loss.item())
-                valid_loss += loss.item()
+                    loss = self.criterion(outputs, labels)
+                    valid_loss += loss.item()
 
             print('\r', end='')
             print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
-
-            val_loss_vals.append(sum(val_epoch_loss) / len(val_epoch_loss))
-            val_accu_vals.append(100 * correct / total)
 
             mixnet_s, _ = self.model.children()
             last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
