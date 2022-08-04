@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+from pyexpat import model
 import time
 import yaml
 import os
@@ -917,20 +918,25 @@ from numpy import inf
 
 class Trainer:
     def __init__(self,
-                 model=None,
-                 cuda_device: str = "cuda:0"):
+                 model_name: str = 'mixnet_s',
+                 checkpoint_path: str = '',
+                 num_classes: int = 2,
+                 cuda_device: str = 'cuda:0'):
         """
         Load the model weights and configure images transformer & device
 
         Args:
-            model: timm model object
+            model (str): model name (default: mixnet_s)
+            checkpoint (str): path to checkpoint (default: '')
+            num_classes (int): number of classes (default: 2)
             cuda_device (str): CUDA device (default: cuda:0)
         """
-
         self.device = torch.device(cuda_device if torch.cuda.is_available() else 'cpu')
-        self.model = torch.nn.Sequential(model, torch.nn.Softmax(dim=1))
-        self.model.to(self.device)
+        self.model_name = model_name
+        self.checkpoint_path = checkpoint_path
+        self.num_classes = num_classes
         self.min_valid_loss = inf
+        self.last_model_path = checkpoint_path
 
     def train(self,
               data_set: str,
@@ -939,19 +945,29 @@ class Trainer:
               weight_decay: float = 0.0001,
               momentum: float = 0.9,
               batch_size: int = 8,
-              best_model_path: str = 'mixnet_s-anti-spoofing.pth'):
+              best_model_path: str = 'mixnet_s-anti-spoofing.pth',
+              reset_training: bool = False,
+              ):
         """
-        Train model
+        Train model, save the best_model_path and last_model_path
 
         Args:
             data_set (str): path/to/dataset
             num_epochs (int): number of epochs to train
             best_model_path (str): path/to/output_checkpoint_file
+            reset_training (bool): train from the last_model_path by default; otherwise, train from checkpoint_path
 
         Return:
             the best model path
         """
         # CREATE LOADERS
+
+        torch.manual_seed(42)
+        
+        model = create_model(model_name=self.model.name, 
+                             num_classes=self.num_classes, 
+                             checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path)
+
         train_path = os.path.join(data_set, 'train')
         val_path = os.path.join(data_set, 'validation')
 
@@ -994,7 +1010,7 @@ class Trainer:
             correct = 0
             total = 0
 
-            self.model.train()
+            model.train()
             for i, (images, labels) in enumerate(train_loader):
                 progressing_pct = int(100*i/len(train_loader)/2)
                 print('\r', end='')
@@ -1006,7 +1022,7 @@ class Trainer:
                     cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
 
                     optimizer.zero_grad()
-                    outputs = self.model(cropped_images)
+                    outputs = model(cropped_images)
                     _, predictions = torch.max(outputs.data, 1)
                     total += labels.size(0)
                     correct += (predictions == labels).sum().item()
@@ -1023,7 +1039,7 @@ class Trainer:
             correct = 0
             total = 0
 
-            self.model.eval()
+            model.eval()
             for i, (images, labels) in enumerate(val_loader):
                 progressing_pct = int(100*i/len(val_loader)/2)
                 print('\r', end='')
@@ -1031,7 +1047,7 @@ class Trainer:
 
                 images, labels = images.to(self.device), labels.to(self.device)
 
-                outputs = self.model(images)
+                outputs = model(images)
 
                 _, predictions = torch.max(outputs.data, 1)
                 total += labels.size(0)
@@ -1042,9 +1058,9 @@ class Trainer:
             print('\r', end='')
             _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
-            mixnet_s, _ = self.model.children()
-            last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
-            torch.save(mixnet_s.state_dict(), last_model_path)
+            mixnet_s, _ = model.children()
+            self.last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
+            torch.save(mixnet_s.state_dict(), self.last_model_path)
 
             if self.min_valid_loss > valid_loss:
                 _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
