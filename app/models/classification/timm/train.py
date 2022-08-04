@@ -963,8 +963,8 @@ class Trainer:
         # CREATE LOADERS
 
         torch.manual_seed(42)
-        
-        model = create_model(model_name=self.model.name, 
+
+        model = create_model(model_name=self.model_name, 
                              num_classes=self.num_classes, 
                              checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path)
 
