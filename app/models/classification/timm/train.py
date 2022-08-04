@@ -918,39 +918,27 @@ from numpy import inf
 class Trainer:
     def __init__(self,
                  model=None,
-                 batch_size: int = 8,
-                 lr: float = 0.001,
-                 weight_decay: float = 0.0001,
-                 momentum: float = 0.9,
                  cuda_device: str = "cuda:0"):
         """
         Load the model weights and configure images transformer & device
 
         Args:
             model: timm model object
-            batch_size (int): batch size (default: 8)
-            lr (float): learning rate (default: 0.001)
-            weight_decay (float): weight decay (default: 0.0001)
-            momentum (float): momentum (default: 0.9)
             cuda_device (str): CUDA device (default: cuda:0)
         """
 
         self.device = torch.device(cuda_device if torch.cuda.is_available() else 'cpu')
-        self.batch_size = batch_size
         self.model = torch.nn.Sequential(model, torch.nn.Softmax(dim=1))
         self.model.to(self.device)
-        self.optimizer = torch.optim.SGD(
-            filter(lambda p: p.requires_grad, self.model.parameters()),
-            lr=lr,
-            weight_decay=weight_decay,
-            momentum=momentum
-        )
-        self.criterion = torch.nn.CrossEntropyLoss()
         self.min_valid_loss = inf
 
     def train(self,
               data_set: str,
               num_epochs: int,
+              learning_rate: float = 0.001,
+              weight_decay: float = 0.0001,
+              momentum: float = 0.9,
+              batch_size: int = 8,
               best_model_path: str = 'mixnet_s-anti-spoofing.pth'):
         """
         Train model
@@ -984,13 +972,22 @@ class Trainer:
         train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=transform_train)
         val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_test)
 
-        train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
-        val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
+        train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+        val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True)
 
-        print('🚀 START TRAINING ...')
+        optimizer = torch.optim.SGD(
+            filter(lambda p: p.requires_grad, self.model.parameters()),
+            lr=learning_rate,
+            weight_decay=weight_decay,
+            momentum=momentum
+        )
+
+        criterion = torch.nn.CrossEntropyLoss()
+
+        _logger.info('🚀 START TRAINING ...')
 
         for epoch in range(num_epochs):
-            print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
+            _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
 
             # TRAINING Process
             train_loss = 0.0
@@ -1008,18 +1005,18 @@ class Trainer:
 
                     cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
 
-                    self.optimizer.zero_grad()
+                    optimizer.zero_grad()
                     outputs = self.model(cropped_images)
                     _, predictions = torch.max(outputs.data, 1)
                     total += labels.size(0)
                     correct += (predictions == labels).sum().item()
 
-                    loss = self.criterion(outputs, labels)
+                    loss = criterion(outputs, labels)
                     loss.backward()
-                    self.optimizer.step()
+                    optimizer.step()
                     train_loss += loss.item()
             print('\r', end='')
-            print(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
+            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
             # VALIDATION Process
             valid_loss = 0.0
@@ -1040,18 +1037,17 @@ class Trainer:
                 total += labels.size(0)
                 correct += (predictions == labels).sum().item()
 
-                loss = self.criterion(outputs, labels)
+                loss = criterion(outputs, labels)
                 valid_loss += loss.item()
-
             print('\r', end='')
-            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
+            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             mixnet_s, _ = self.model.children()
             last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
             torch.save(mixnet_s.state_dict(), last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
+                _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
         
