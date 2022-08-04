@@ -968,21 +968,21 @@ class Trainer:
         val_path = os.path.join(data_set, 'validation')
 
         transform_train = t.Compose([
-            t.Resize(size=(400, 400)),
-            t.TenCrop(size=(224, 224)),
+            t.Resize(size=(1000, 1000)),
+            t.TenCrop(size=(400, 400)),
             t.Lambda(lambda crops: [t.ToTensor()(crop) for crop in crops]),
             t.Lambda(lambda crops: [t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))(crop) for crop in crops]),
             t.Lambda(lambda crops: torch.stack(crops))
         ])
         transform_test = t.Compose([
-            t.Resize(size=(400, 400)),
-            t.CenterCrop(size=(224, 224)),
+            t.Resize(size=(1000, 1000)),
+            t.CenterCrop(size=(400, 400)),
             t.ToTensor(),
             t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225))
         ])
 
         train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=transform_train)
-        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_train)
+        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_test)
 
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=self.batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=self.batch_size, shuffle=True)
@@ -1031,20 +1031,17 @@ class Trainer:
                 progressing_pct = int(100*i/len(val_loader)/2)
                 print('\r', end='')
                 print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(val_loader):.2f} %', end='')
-                crop_list = images.tolist()
-                for crop_idx in range(10):
-                    cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
 
-                    cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
+                images, labels = images.to(self.device), labels.to(self.device)
 
-                    outputs = self.model(cropped_images)
+                outputs = self.model(images)
 
-                    _, predictions = torch.max(outputs.data, 1)
-                    total += labels.size(0)
-                    correct += (predictions == labels).sum().item()
+                _, predictions = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predictions == labels).sum().item()
 
-                    loss = self.criterion(outputs, labels)
-                    valid_loss += loss.item()
+                loss = self.criterion(outputs, labels)
+                valid_loss += loss.item()
 
             print('\r', end='')
             print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')

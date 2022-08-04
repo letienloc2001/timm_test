@@ -36,7 +36,7 @@ class Classification:
 		Returns:
 			the best checkpoint path
 		"""
-		#TODO: get configuaration from DB
+		# TODO: get configuaration from DB
 		with open(configuration, 'r') as f:
 			cfg = yaml.safe_load(f)
 
