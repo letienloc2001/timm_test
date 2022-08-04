@@ -992,7 +992,7 @@ class Trainer:
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True)
 
         optimizer = torch.optim.SGD(
-            filter(lambda p: p.requires_grad, self.model.parameters()),
+            filter(lambda p: p.requires_grad, model.parameters()),
             lr=learning_rate,
             weight_decay=weight_decay,
             momentum=momentum
