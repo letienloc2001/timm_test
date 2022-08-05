@@ -970,7 +970,7 @@ class Trainer:
         model = create_model(model_name=self.model_name, 
                              num_classes=self.num_classes, 
                              checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path,
-                             pretrained=True)
+                             pretrained=False)
         model = nn.Sequential(model, nn.Softmax(dim=1))                    
         model.to(self.device)
 
@@ -1066,14 +1066,14 @@ class Trainer:
                 loss = criterion(outputs, labels)
                 valid_loss += loss.item()
             print('\r', end='')
-            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader)/10:.5f}')
+            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
             torch.save(mixnet_s.state_dict(), self.last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader)/10:.5f} ==> {valid_loss / len(val_loader)/10:.5f})')
+                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
         
