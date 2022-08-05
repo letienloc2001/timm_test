@@ -1005,7 +1005,13 @@ class Trainer:
         )
 
         criterion = torch.nn.CrossEntropyLoss()
-
+        count = 0
+        total = 0
+        for i in model.parameters():
+            if i.requires_grad:
+                count += 1
+            total += 1
+        print(count, total)
         print('🚀 START TRAINING ...')
 
         for epoch in range(num_epochs):
