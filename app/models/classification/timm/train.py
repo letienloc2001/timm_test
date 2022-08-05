@@ -913,7 +913,8 @@ def validate(model, loader, loss_fn, args, amp_autocast=suppress, log_suffix='')
 
 
 from torchvision import transforms as t
-from numpy import inf
+import numpy as np
+import random
 
 
 class Trainer:
@@ -935,7 +936,7 @@ class Trainer:
         self.model_name = model_name
         self.checkpoint_path = checkpoint_path
         self.num_classes = num_classes
-        self.min_valid_loss = inf
+        self.min_valid_loss = np.inf
         self.last_model_path = checkpoint_path
 
     def train(self,
@@ -963,10 +964,13 @@ class Trainer:
         # CREATE LOADERS
 
         torch.manual_seed(42)
+        random.seed(42)
+        np.random.seed(42)
 
         model = create_model(model_name=self.model_name, 
                              num_classes=self.num_classes, 
-                             checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path)
+                             checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path,
+                             pretrained=True)
         model = nn.Sequential(model, nn.Softmax(dim=1))                    
         model.to(self.device)
 
@@ -988,7 +992,7 @@ class Trainer:
         ])
 
         train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=transform_train)
-        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_train)
+        val_dataset = torchvision.datasets.ImageFolder(root=val_path, transform=transform_test)
 
         train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
         val_loader = torch.utils.data.DataLoader(dataset=val_dataset, batch_size=batch_size, shuffle=True)
