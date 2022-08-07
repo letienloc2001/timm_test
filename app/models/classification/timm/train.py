@@ -1171,7 +1171,7 @@ def test():
     train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
     val_loader   = torch.utils.data.DataLoader(dataset=val_dataset,   batch_size=BATCH_SIZE, shuffle=True)
 
-    model = create_model('mixnet_s', pretrained=True, num_classes=NUM_CLASSES)
+    model = create_model('mixnet_s', pretrained=False, num_classes=NUM_CLASSES)
     model = torch.nn.Sequential(model, torch.nn.Softmax(dim=1))
     model.to(device)
 
