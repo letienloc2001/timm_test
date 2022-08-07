@@ -1161,7 +1161,7 @@ def test():
         t.Normalize(mean=(0.485, 0.456, 0.406), std=(0.229, 0.224, 0.225)),
     ])
 
-    DATASET   = '/content/drive/Shareddrives/Viettel_AI_Intern/Task/Anti-Spoofing-Classification/dataset/curated_dataset_v1'
+    DATASET   = 'test/dataset'
     TRAIN_SET = os.path.join(DATASET, 'train')
     VAL_SET   = os.path.join(DATASET, 'validation')
 
