@@ -1056,12 +1056,8 @@ class Trainer:
                 progressing_pct = int(100*i/len(val_loader)/2)
                 print('\r', end='')
                 print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(val_loader):.2f} %', end='')
-                # crop_list = images.tolist()
-                # for crop_idx in range(10):
-                #     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
 
                 images, labels = images.to(self.device), labels.to(self.device)
-                # images, labels = images.to(self.device), labels.to(self.device)
                 outputs = model(images)
 
                 _, predictions = torch.max(outputs.data, 1)
