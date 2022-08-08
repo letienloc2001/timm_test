@@ -945,7 +945,7 @@ class Trainer:
         self.num_classes = num_classes
         self.pretrained = pretrained
         self.min_valid_loss = np.inf
-        self.last_model_path = checkpoint_path
+        self.last_model_path = checkpoint_path 
 
     def train(self,
               data_set: str,

@@ -19,6 +19,10 @@ class Classification:
 			num_classes=num_classes,
 			no_test_pool=True,
 		)
+		self.anti_spoofing_trainer = Trainer(model_name=model_name,
+									  		checkpoint_path=checkpoint_path,
+									  		num_classes=num_classes
+											pretrained=True)
 
 	def infer(self, source):
 		return self.model.run(source=source, batch_size=8)
@@ -30,23 +34,25 @@ class Classification:
 			Train model and save its checkpoint
 
 		Args:
-			dataset (str): path to dataset
+			data_set (str): path to dataset
 			configuration (str): path to config.yaml
 
 		Returns:
 			the best checkpoint path
 		"""
-		# TODO: get configuaration from DB
+		#TODO: get configuaration from DB
 		with open(configuration, 'r') as f:
 			cfg = yaml.safe_load(f)
 
-		anti_spoofing_model = Trainer(model=self.model.model,
-													batch_size=cfg['batch_size'],
-													lr=cfg['lr'],
+		best_model_path = self.anti_spoofing_trainer.train(data_set=data_set,
+													num_epochs=cfg['epochs'],
+													learning_rate=cfg['lr'],
 													weight_decay=cfg['weight_decay'],
-													momentum=cfg['momentum'])
+													momentum=cfg['momentum'],
+													batch_size=cfg['batch_size'],
+													best_model_path=cfg['outpath'],
+													reset_training=cfg['reset_training'])
 
-		best_model_path = anti_spoofing_model.train(data_set, cfg['epochs'], cfg['outpath'])
   
 		# TODO: Validate performance before assigning to the instance
 		self.model = Inference(
