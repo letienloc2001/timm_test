@@ -382,4 +382,3 @@ output/
 *.pt
 *.gz
 test.ipynb
-test.py

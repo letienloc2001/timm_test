@@ -1,3 +1,4 @@
+import imp
 from urllib.parse import urlsplit, urlunsplit
 import os
 
