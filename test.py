@@ -51,7 +51,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 NUM_EPOCHS = 15
 NUM_CLASSES = 2
 BATCH_SIZE = 4
-LEARNING_RATE = 0.001
+LEARNING_RATE = 0.0001
 MOMENTUM = 0.9
 WEIGHT_DECAY = 0.0001
 
