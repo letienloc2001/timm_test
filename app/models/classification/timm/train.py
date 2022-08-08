@@ -1089,6 +1089,7 @@ trainer = Trainer()
 trainer.train(
     data_set='test/dataset',
     num_epochs=15,
+    learning_rate=0.0005,
 )
 
 # def pretty_print(raw_text: str, text_color: str, background_color: str = '', style: str = 'normal', end: str = '\n', string_return: bool = False):
