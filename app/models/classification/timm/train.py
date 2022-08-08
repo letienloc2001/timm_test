@@ -988,7 +988,7 @@ class Trainer:
 
 
         train_path = os.path.join(data_set, 'train')
-        val_path  = os.path.join(data_set, 'validation')
+        val_path   = os.path.join(data_set, 'validation')
 
         train_dataset = torchvision.datasets.ImageFolder(root=train_path, transform=transform_train)
         val_dataset   = torchvision.datasets.ImageFolder(root=val_path, transform=transform_test)
@@ -999,7 +999,7 @@ class Trainer:
         model = create_model(model_name=self.model_name, 
                              num_classes=self.num_classes, 
                              checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path,
-                             pretrained=True)
+                             pretrained=False)
         model = nn.Sequential(model, nn.Softmax(dim=1))                    
         model.to(self.device)
 
@@ -1014,10 +1014,6 @@ class Trainer:
 
         print('🚀 START TRAINING ...')
         
-        train_loss_vals = []
-        val_loss_vals = []
-        train_accu_vals = []
-        val_accu_vals = []
         for epoch in range(num_epochs):
             print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
 
@@ -1025,7 +1021,6 @@ class Trainer:
             train_loss = 0.0
             correct = 0
             total = 0
-            train_epoch_loss = []
 
             model.train()
             for i, (images, labels) in enumerate(train_loader):
@@ -1045,19 +1040,17 @@ class Trainer:
 
                     loss = criterion(outputs, labels)
                     loss.backward()
-                    train_epoch_loss.append(loss.item())
                     optimizer.step()
                     train_loss += loss.item()
             print('\r', end='')
             print(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
-            train_loss_vals.append(sum(train_epoch_loss)/len(train_epoch_loss))
-            train_accu_vals.append(100 * correct / total)
+
 
             # VALIDATION Process
             valid_loss = 0.0
             correct = 0
             total = 0
-            val_epoch_loss = []
+
             model.eval()
             for i, (images, labels) in enumerate(val_loader):
                 progressing_pct = int(100*i/len(val_loader)/2)
@@ -1076,12 +1069,10 @@ class Trainer:
                 correct += (predictions == labels).sum().item()
 
                 loss = criterion(outputs, labels)
-                val_epoch_loss.append(loss.item())
                 valid_loss += loss.item()
             print('\r', end='')
             print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
-            val_loss_vals.append(sum(val_epoch_loss)/len(val_epoch_loss))
-            val_accu_vals.append(100 * correct / total)
+
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
