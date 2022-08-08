@@ -1129,7 +1129,7 @@ class Trainer:
         NUM_EPOCHS = 15
         NUM_CLASSES = 2
         BATCH_SIZE = 4
-        LEARNING_RATE = 0.0001
+        LEARNING_RATE = 0.0005
         MOMENTUM = 0.9
         WEIGHT_DECAY = 0.0001
 
