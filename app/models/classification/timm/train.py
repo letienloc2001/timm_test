@@ -927,20 +927,23 @@ class Trainer:
                  model_name: str = 'mixnet_s',
                  checkpoint_path: str = '',
                  num_classes: int = 2,
+                 pretrained: bool = False,
                  cuda_device: str = 'cuda:0'):
         """
         Load the model weights and configure images transformer & device
 
         Args:
             model (str): model name (default: mixnet_s)
-            checkpoint (str): path to checkpoint (default: '')ii
+            checkpoint_path (str): path to checkpoint (default: '')
             num_classes (int): number of classes (default: 2)
+            pretrained (bool): use pretrained ImageNet
             cuda_device (str): CUDA device (default: cuda:0)
         """
         self.device = torch.device(cuda_device if torch.cuda.is_available() else 'cpu')
         self.model_name = model_name
         self.checkpoint_path = checkpoint_path
         self.num_classes = num_classes
+        self.pretrained = pretrained
         self.min_valid_loss = np.inf
         self.last_model_path = checkpoint_path
 
@@ -999,7 +1002,7 @@ class Trainer:
         model = create_model(model_name=self.model_name, 
                              num_classes=self.num_classes, 
                              checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path,
-                             pretrained=True)
+                             pretrained=self.pretrained)
         model = nn.Sequential(model, nn.Softmax(dim=1))                    
         model.to(self.device)
 
@@ -1012,10 +1015,10 @@ class Trainer:
             momentum=momentum
         )
 
-        print('🚀 START TRAINING ...')
+        _logger.info('🚀 START TRAINING ...')
         
         for epoch in range(num_epochs):
-            print(f'\nEpoch {epoch + 1}/{num_epochs}: ')
+            _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
 
             # TRAINING Process
             train_loss = 0.0
@@ -1023,10 +1026,7 @@ class Trainer:
             total = 0
 
             model.train()
-            for i, (images, labels) in enumerate(train_loader):
-                progressing_pct = int(100*i/len(train_loader)/2)
-                print('\r', end='')
-                print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(train_loader):.2f} %', end='')
+            for _, (images, labels) in enumerate(train_loader):
                 crop_list = images.tolist()
                 for crop_idx in range(10):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -1042,8 +1042,7 @@ class Trainer:
                     loss.backward()
                     optimizer.step()
                     train_loss += loss.item()
-            print('\r', end='')
-            print(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
+            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
 
             # VALIDATION Process
@@ -1052,11 +1051,7 @@ class Trainer:
             total = 0
 
             model.eval()
-            for i, (images, labels) in enumerate(val_loader):
-                progressing_pct = int(100*i/len(val_loader)/2)
-                print('\r', end='')
-                print('|' + '='*progressing_pct + '>' + ' '*(50-progressing_pct) + '| ' + f'{100*i/len(val_loader):.2f} %', end='')
-
+            for _, (images, labels) in enumerate(val_loader):
                 images, labels = images.to(self.device), labels.to(self.device)
                 outputs = model(images)
 
@@ -1066,20 +1061,18 @@ class Trainer:
 
                 loss = criterion(outputs, labels)
                 valid_loss += loss.item()
-            print('\r', end='')
-            print(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
-
+            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/')+1] + 'last_model_path.pth'
             torch.save(mixnet_s.state_dict(), self.last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                print(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
+                _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
         
-        print(f'🚀 Best model: {best_model_path}')
+        _logger.info(f'🚀 Best model: {best_model_path}')
         return best_model_path
 
 
