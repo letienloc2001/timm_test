@@ -38,7 +38,7 @@ import numpy as np
 import torch
 import os
 import random
-from .app.models.classification.timm.timm import create_model
+from app.models.classification.timm.timm import create_model
 from torchvision import transforms as t
 import torchvision
 
