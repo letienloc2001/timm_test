@@ -922,6 +922,40 @@ from torchvision import transforms as t
 import torchvision
 from torch import nn
 
+def pretty_print(raw_text: str, text_color: str, background_color: str = '', style: str = 'normal', end: str = '\n', string_return: bool = False):
+    style_dict = {
+        'n': 0, 'normal'    : 0,
+        'b': 1, 'bold'      : 1,
+        'l': 2, 'light'     : 2,
+        'i': 3, 'italicized': 3,
+        'u': 4, 'underlined': 4,
+        'blink'  : 5,
+        'inverse': 7,
+        'hidden' : 8,
+        'strikethrough': 9
+    }
+
+    color_dict = {
+        'black' : 0,
+        'red'   : 1,
+        'green' : 2,
+        'yellow': 3,
+        'blue'  : 4,
+        'purple': 5,
+        'cyan'  : 6,
+        'white' : 7,
+    }
+
+    Text_color, Background_color = text_color.split(' '), background_color.split(' ')
+
+    style_code = str(style_dict[style]) + ';'
+    text_color_code = str(color_dict[Text_color[-1]] + (90 if Text_color[0] == 'bright' else 30))
+    background_color_code = (';' + str(color_dict[Background_color[-1]] + (100 if Background_color[0] == 'bright' else 40))) if Background_color[0] != '' else ''
+    formatted_text = '\033[' + style_code + text_color_code + background_color_code + 'm' + raw_text + '\033[0m'
+    if string_return:
+        return formatted_text
+    else: 
+        print(formatted_text, end=end)
 
 class Trainer:
     def __init__(self,
@@ -1237,38 +1271,3 @@ trainer = Trainer()
 #     batch_size=4,
 # )
 trainer.train_v2()
-
-def pretty_print(raw_text: str, text_color: str, background_color: str = '', style: str = 'normal', end: str = '\n', string_return: bool = False):
-    style_dict = {
-        'n': 0, 'normal'    : 0,
-        'b': 1, 'bold'      : 1,
-        'l': 2, 'light'     : 2,
-        'i': 3, 'italicized': 3,
-        'u': 4, 'underlined': 4,
-        'blink'  : 5,
-        'inverse': 7,
-        'hidden' : 8,
-        'strikethrough': 9
-    }
-
-    color_dict = {
-        'black' : 0,
-        'red'   : 1,
-        'green' : 2,
-        'yellow': 3,
-        'blue'  : 4,
-        'purple': 5,
-        'cyan'  : 6,
-        'white' : 7,
-    }
-
-    Text_color, Background_color = text_color.split(' '), background_color.split(' ')
-
-    style_code = str(style_dict[style]) + ';'
-    text_color_code = str(color_dict[Text_color[-1]] + (90 if Text_color[0] == 'bright' else 30))
-    background_color_code = (';' + str(color_dict[Background_color[-1]] + (100 if Background_color[0] == 'bright' else 40))) if Background_color[0] != '' else ''
-    formatted_text = '\033[' + style_code + text_color_code + background_color_code + 'm' + raw_text + '\033[0m'
-    if string_return:
-        return formatted_text
-    else: 
-        print(formatted_text, end=end)
