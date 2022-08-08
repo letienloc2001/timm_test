@@ -1085,7 +1085,7 @@ class Trainer:
         print(f'🚀 Best model: {best_model_path}')
         return best_model_path
 
-    def train_v2():
+    def train_v2(self):
         torch.manual_seed(42)
         random.seed(42)
         np.random.seed(42)
