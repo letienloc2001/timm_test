@@ -1,62 +1,62 @@
-# # !/usr/bin/env python3
-import argparse
-from pyexpat import model
-import time
-import yaml
-import os
-import logging
-from collections import OrderedDict
-from contextlib import suppress
-from datetime import datetime
-from pathlib import Path
-import sys
+# # # !/usr/bin/env python3
+# import argparse
+# from pyexpat import model
+# import time
+# import yaml
+# import os
+# import logging
+# from collections import OrderedDict
+# from contextlib import suppress
+# from datetime import datetime
+# from pathlib import Path
+# import sys
 
-import torch
-import torch.nn as nn
-import torchvision.utils
-from torch.nn.parallel import DistributedDataParallel as NativeDDP
+# import torch
+# import torch.nn as nn
+# import torchvision.utils
+# from torch.nn.parallel import DistributedDataParallel as NativeDDP
 
-FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0]
-if str(ROOT) not in sys.path:
-    sys.path.append(str(ROOT))  # add ROOT to PATH
-ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
+# FILE = Path(__file__).resolve()
+# ROOT = FILE.parents[0]
+# if str(ROOT) not in sys.path:
+#     sys.path.append(str(ROOT))  # add ROOT to PATH
+# ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
-from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
-from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint,\
-    convert_splitbn_model, model_parameters
-from timm import utils
-from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy
-from timm.optim import create_optimizer_v2, optimizer_kwargs
-from timm.scheduler import create_scheduler
-from timm.utils import ApexScaler, NativeScaler
+# from timm.data import create_dataset, create_loader, resolve_data_config, Mixup, FastCollateMixup, AugMixDataset
+# from timm.models import create_model, safe_model_name, resume_checkpoint, load_checkpoint,\
+#     convert_splitbn_model, model_parameters
+# from timm import utils
+# from timm.loss import JsdCrossEntropy, SoftTargetCrossEntropy, BinaryCrossEntropy, LabelSmoothingCrossEntropy
+# from timm.optim import create_optimizer_v2, optimizer_kwargs
+# from timm.scheduler import create_scheduler
+# from timm.utils import ApexScaler, NativeScaler
 
-try:
-    from apex import amp
-    from apex.parallel import DistributedDataParallel as ApexDDP
-    from apex.parallel import convert_syncbn_model
-    has_apex = True
-except ImportError:
-    has_apex = False
+# try:
+#     from apex import amp
+#     from apex.parallel import DistributedDataParallel as ApexDDP
+#     from apex.parallel import convert_syncbn_model
+#     has_apex = True
+# except ImportError:
+#     has_apex = False
 
-has_native_amp = False
-try:
-    if getattr(torch.cuda.amp, 'autocast') is not None:
-        has_native_amp = True
-except AttributeError:
-    pass
+# has_native_amp = False
+# try:
+#     if getattr(torch.cuda.amp, 'autocast') is not None:
+#         has_native_amp = True
+# except AttributeError:
+#     pass
 
-try:
-    import wandb
-    has_wandb = True
-except ImportError:
-    has_wandb = False
+# try:
+#     import wandb
+#     has_wandb = True
+# except ImportError:
+#     has_wandb = False
 
-try:
-    from functorch.compile import memory_efficient_fusion
-    has_functorch = True
-except ImportError as e:
-    has_functorch = False
+# try:
+#     from functorch.compile import memory_efficient_fusion
+#     has_functorch = True
+# except ImportError as e:
+#     has_functorch = False
 
 
 # torch.backends.cudnn.benchmark = True
