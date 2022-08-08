@@ -999,7 +999,7 @@ class Trainer:
         model = create_model(model_name=self.model_name, 
                              num_classes=self.num_classes, 
                              checkpoint_path=self.checkpoint_path if reset_training else self.last_model_path,
-                             pretrained=False)
+                             pretrained=True)
         model = nn.Sequential(model, nn.Softmax(dim=1))                    
         model.to(self.device)
 
