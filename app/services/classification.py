@@ -21,7 +21,7 @@ class Classification:
 		)
 		self.anti_spoofing_trainer = Trainer(model_name=model_name,
 									  		checkpoint_path=checkpoint_path,
-									  		num_classes=num_classes
+									  		num_classes=num_classes,
 											pretrained=True)
 
 	def infer(self, source):
