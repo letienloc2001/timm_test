@@ -858,6 +858,8 @@ import numpy as np
 import random
 from torchvision import transforms as t
 from torchvision.datasets import ImageFolder
+import tqdm
+
 
 
 class Trainer:
@@ -961,11 +963,12 @@ class Trainer:
             total = 0
 
             model.train()
-            for _, (images, labels) in enumerate(train_loader):
+            pbar = tqdm.tqdm(total=len(train_loader), desc='Train', position=0)
+            for i, (images, labels) in enumerate(train_loader):
+                pbar.update(i)
                 crop_list = images.tolist()
                 for crop_idx in range(10):
-                    cropped_images = torch.Tensor(
-                        [crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
+                    cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
                     cropped_images, labels = cropped_images.to(self.device), labels.to(self.device)
 
                     optimizer.zero_grad()
@@ -978,8 +981,7 @@ class Trainer:
                     loss.backward()
                     optimizer.step()
                     train_loss += loss.item()
-            _logger.info(
-                f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
+            _logger.info(f'\r- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
             # VALIDATION Process
             valid_loss = 0.0
@@ -987,7 +989,9 @@ class Trainer:
             total = 0
 
             model.eval()
-            for _, (images, labels) in enumerate(val_loader):
+            pbar = tqdm.tqdm(total=len(train_loader), desc='Validation', position=0)
+            for i, (images, labels) in enumerate(val_loader):
+                pbar.update(i)
                 images, labels = images.to(self.device), labels.to(self.device)
                 outputs = model(images)
 
@@ -997,16 +1001,14 @@ class Trainer:
 
                 loss = criterion(outputs, labels)
                 valid_loss += loss.item()
-            _logger.info(
-                f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
+            _logger.info(f'\r- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/') + 1] + 'last_model_path.pth'
             torch.save(mixnet_s.state_dict(), self.last_model_path)
 
             if self.min_valid_loss > valid_loss:
-                _logger.info(
-                    f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
+                _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
 
