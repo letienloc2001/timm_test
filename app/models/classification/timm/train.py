@@ -963,7 +963,7 @@ class Trainer:
             total = 0
 
             model.train()
-            pbar = tqdm.tqdm(total=len(train_loader), desc='Train', position=0)
+            pbar = tqdm.tqdm(total=len(train_loader), desc='Train    ', position=0)
             for i, (images, labels) in enumerate(train_loader):
                 pbar.update(i)
                 crop_list = images.tolist()
