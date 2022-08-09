@@ -858,9 +858,6 @@ import numpy as np
 import random
 from torchvision import transforms as t
 from torchvision.datasets import ImageFolder
-import tqdm
-
-
 
 class Trainer:
     def __init__(self,
@@ -963,9 +960,7 @@ class Trainer:
             total = 0
 
             model.train()
-            pbar = tqdm.tqdm(total=len(train_loader), desc='Train    ', position=0)
-            for i, (images, labels) in enumerate(train_loader):
-                pbar.update(i)
+            for _, (images, labels) in enumerate(train_loader):
                 crop_list = images.tolist()
                 for crop_idx in range(10):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -989,9 +984,7 @@ class Trainer:
             total = 0
 
             model.eval()
-            pbar = tqdm.tqdm(total=len(val_loader), desc='Validation', position=0)
-            for i, (images, labels) in enumerate(val_loader):
-                pbar.update(i)
+            for _, (images, labels) in enumerate(val_loader):
                 images, labels = images.to(self.device), labels.to(self.device)
                 outputs = model(images)
 
