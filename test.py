@@ -51,8 +51,16 @@
 
 import logging
 import time
-logger = logging.getLogger('njns')
+import enlighten
 
-for i in range(100):
-    logger.info(f'{i}')
-    time.sleep(1)
+# Setup logging
+logger = logging.getLogger()
+
+# Setup progress bar
+manager = enlighten.get_manager()
+pbar = manager.counter(total=100, desc='Train', unit='it')
+
+for i in range(1, 101):
+    # logger.info("Processing step %s" % i)
+    time.sleep(.2)
+    pbar.update()

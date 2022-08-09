@@ -858,7 +858,7 @@ import numpy as np
 import random
 from torchvision import transforms as t
 from torchvision.datasets import ImageFolder
-
+import enlighten
 class Trainer:
     def __init__(self,
                  model_name: str = 'mixnet_s',
@@ -960,7 +960,9 @@ class Trainer:
             total = 0
 
             model.train()
+            pbar = enlighten.get_manager().counter(total=100, desc='Train      ', unit='it')
             for _, (images, labels) in enumerate(train_loader):
+                pbar.update()
                 crop_list = images.tolist()
                 for crop_idx in range(10):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -984,7 +986,9 @@ class Trainer:
             total = 0
 
             model.eval()
+            pbar = enlighten.get_manager().counter(total=100, desc='Validation', unit='it')
             for _, (images, labels) in enumerate(val_loader):
+                pbar.update()
                 images, labels = images.to(self.device), labels.to(self.device)
                 outputs = model(images)
 
