@@ -9,7 +9,8 @@ class Classification:
 	def __init__(self,
 				 checkpoint_path: str,
 				 model_name: str = "mixnet_s",
-				 num_classes: int = 2):
+				 num_classes: int = 2,
+				 pretrained: bool = False):
 		self.model_name = model_name
 		self.num_classes = num_classes
 		self.checkpoint_path = checkpoint_path
@@ -22,7 +23,7 @@ class Classification:
 		self.anti_spoofing_trainer = Trainer(model_name=model_name,
 											 checkpoint_path=checkpoint_path,
 											 num_classes=num_classes,
-											 pretrained=True)
+											 pretrained=pretrained)
 
 	def infer(self, source):
 		return self.model.run(source=source, batch_size=8)
