@@ -960,7 +960,7 @@ class Trainer:
             total = 0
 
             model.train()
-            pbar = enlighten.get_manager().counter(total=100, desc='Train      ', unit='it')
+            pbar = enlighten.get_manager().counter(total=len(train_loader), desc='Train      ', unit='it')
             for _, (images, labels) in enumerate(train_loader):
                 pbar.update()
                 crop_list = images.tolist()
@@ -986,7 +986,7 @@ class Trainer:
             total = 0
 
             model.eval()
-            pbar = enlighten.get_manager().counter(total=100, desc='Validation', unit='it')
+            pbar = enlighten.get_manager().counter(total=len(val_loader), desc='Validation', unit='it')
             for _, (images, labels) in enumerate(val_loader):
                 pbar.update()
                 images, labels = images.to(self.device), labels.to(self.device)
