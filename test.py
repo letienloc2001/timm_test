@@ -39,12 +39,20 @@
 #     outer.update(1)
 #     time.sleep(0.5)
 
+# import logging
+# # create console handler
+# ch = logging.StreamHandler()
+# # create formatter
+# formatter = logging.Formatter('\x1b[80D\x1b[1A\x1b[K%(message)s')
+# # add formatter to console handler
+# ch.setFormatter(formatter)
+# # add console handler to logger
+# logger.addHandler(ch)
+
 import logging
-# create console handler
-ch = logging.StreamHandler()
-# create formatter
-formatter = logging.Formatter('\x1b[80D\x1b[1A\x1b[K%(message)s')
-# add formatter to console handler
-ch.setFormatter(formatter)
-# add console handler to logger
-logger.addHandler(ch)
+import time
+logger = logging.getLogger('njns')
+
+for i in range(100):
+    logger.info(f'{i}')
+    time.sleep(1)
