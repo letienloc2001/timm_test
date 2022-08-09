@@ -953,7 +953,7 @@ class Trainer:
         _logger.info('🚀 START TRAINING ...')
 
         for epoch in range(num_epochs):
-            _logger.info(f'\nEpoch {epoch + 1}/{num_epochs}: ')
+            _logger.info(f'Epoch {epoch + 1}/{num_epochs}: ')
 
             # TRAINING Process
             train_loss = 0.0
