@@ -964,8 +964,8 @@ class Trainer:
 
             model.train()
             pbar = tqdm.tqdm(total=100, desc='Train', position=0)
-            for _, (images, labels) in enumerate(train_loader):
-                pbar.update(1/len(train_loader))
+            for i, (images, labels) in enumerate(train_loader):
+                pbar.update(int(i/len(train_loader)))
                 crop_list = images.tolist()
                 for crop_idx in range(10):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -990,8 +990,8 @@ class Trainer:
 
             model.eval()
             pbar = tqdm.tqdm(total=100, desc='Validation', position=0)
-            for _, (images, labels) in enumerate(val_loader):
-                pbar.update(1/len(val_loader))
+            for i, (images, labels) in enumerate(val_loader):
+                pbar.update(int(i/len(val_loader)))
                 images, labels = images.to(self.device), labels.to(self.device)
                 outputs = model(images)
 
