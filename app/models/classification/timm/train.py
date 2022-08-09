@@ -1008,5 +1008,6 @@ class Trainer:
                 _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
+            _logger.info('')
         _logger.info(f'🚀 Best model: {best_model_path}')
         return best_model_path
