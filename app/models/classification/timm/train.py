@@ -963,9 +963,9 @@ class Trainer:
             total = 0
 
             model.train()
-            pbar = tqdm.tqdm(total=100, desc='Train', position=0)
+            pbar = tqdm.tqdm(total=len(train_loader), desc='Train', position=0)
             for i, (images, labels) in enumerate(train_loader):
-                pbar.update(int(i/len(train_loader)))
+                pbar.update(i)
                 crop_list = images.tolist()
                 for crop_idx in range(10):
                     cropped_images = torch.Tensor([crop_list[batch_idx][crop_idx] for batch_idx in range(images.size(0))])
@@ -981,7 +981,7 @@ class Trainer:
                     loss.backward()
                     optimizer.step()
                     train_loss += loss.item()
-            _logger.info(f'\r- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
+            _logger.info(f'- Training Accuracy  : {100 * correct / total:.2f} %, Training Loss  : {train_loss / (len(train_loader) * 10):.5f}')
 
             # VALIDATION Process
             valid_loss = 0.0
@@ -989,9 +989,9 @@ class Trainer:
             total = 0
 
             model.eval()
-            pbar = tqdm.tqdm(total=100, desc='Validation', position=0)
+            pbar = tqdm.tqdm(total=len(val_loader), desc='Validation', position=0)
             for i, (images, labels) in enumerate(val_loader):
-                pbar.update(int(i/len(val_loader)))
+                pbar.update(i)
                 images, labels = images.to(self.device), labels.to(self.device)
                 outputs = model(images)
 
@@ -1001,7 +1001,7 @@ class Trainer:
 
                 loss = criterion(outputs, labels)
                 valid_loss += loss.item()
-            _logger.info(f'\r- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
+            _logger.info(f'- Validation Accuracy: {100 * correct / total:.2f} %, Validation Loss: {valid_loss / len(val_loader):.5f}')
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/') + 1] + 'last_model_path.pth'
