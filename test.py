@@ -1,66 +1,26 @@
-# import logging
-# import time
-# import enlighten
-# # Setup logging
-# logging.basicConfig(level=logging.INFO)
-# logger = logging.getLogger()
-# # Setup progress bar
-# manager = enlighten.get_manager()
-# pbar = manager.counter(total=100, desc='Train', unit='batches')
+from app.services.classification import Classification
 
-# for i in range(1, 101):
-#     # logger.info("Processing step %s" % i)
-#     time.sleep(.2)
-#     pbar.update()
-# import logging
-# import time
-# import colorlog
-# from tqdm import tqdm
+cfg = dict(
+    epochs = 15,
+    lr = 0.0005,
+    weight_decay = 0.0009,
+    batch_size = 8,
+    momentum = 0.9,
+    outpath = 'checkpoint/mixnet_s-anti-spoofing-from-training.pth',
+    reset_training = False,
+)
+import yaml
+with open('test/anti-spoofing.yaml', 'w') as cfg_file:
+    yaml.dump(cfg, cfg_file, default_flow_style=False)
 
-# class TqdmHandler(logging.StreamHandler):
-#     def __init__(self):
-#         logging.StreamHandler.__init__(self)
+anti_spoofing_trainer = Classification(checkpoint_path='')
+anti_spoofing_trainer.train('test/dataset', 'test/anti-spoofing.yaml')
 
-#     def emit(self, record):
-#         msg = self.format(record)
-#         tqdm.write(msg)
+checkpoint_path = 'checkpoint/mixnet_s-anti-spoofing-from-training.pth' # 'checkpoint/mixnet_s-anti-spoofing.pth'
+anti_spoofing_model = Classification(checkpoint_path=checkpoint_path)
 
-# if __name__ == "__main__":
-#     for x in tqdm(range(100)):
-#         logger = colorlog.getLogger("MYAPP")
-#         logger.setLevel(logging.DEBUG)
-#         handler = TqdmHandler()
-#         logger.addHandler(handler)
-#         time.sleep(.5)
-# import tqdm
-# import time
-# outer = tqdm.tqdm(total=100, desc='Epoch', position=0)
-# for ii in range(100):
-#     outer.update(1)
-#     time.sleep(0.5)
+fake_prediction = anti_spoofing_model.infer('test/dataset/test/fake')
+real_prediction = anti_spoofing_model.infer('test/dataset/test/real')
 
-# import logging
-# # create console handler
-# ch = logging.StreamHandler()
-# # create formatter
-# formatter = logging.Formatter('\x1b[80D\x1b[1A\x1b[K%(message)s')
-# # add formatter to console handler
-# ch.setFormatter(formatter)
-# # add console handler to logger
-# logger.addHandler(ch)
-
-import logging
-import time
-import enlighten
-
-# Setup logging
-logger = logging.getLogger()
-
-# Setup progress bar
-manager = enlighten.get_manager()
-pbar = manager.counter(total=100, desc='Train', unit='it')
-
-for i in range(1, 101):
-    # logger.info("Processing step %s" % i)
-    time.sleep(.2)
-    pbar.update()
+print('🤥 FAKE PREDICTION: ', [e[0] for array in fake_prediction for e in array.tolist()])
+print('😘 REAL PREDICTION: ', [e[0] for array in real_prediction for e in array.tolist()])

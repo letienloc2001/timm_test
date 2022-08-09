@@ -978,7 +978,7 @@ class Trainer:
                     loss.backward()
                     optimizer.step()
                     train_loss += loss.item()
-            _logger.info(f'Accuracy: {100 * correct / total:.2f} %, Loss: {train_loss / (len(train_loader) * 10):.5f}')
+            _logger.info(f'Accuracy: {100 * correct / total:.2f}%, Loss: {train_loss / (len(train_loader) * 10):.5f}')
 
             # VALIDATION Process
             valid_loss = 0.0
@@ -998,7 +998,7 @@ class Trainer:
 
                 loss = criterion(outputs, labels)
                 valid_loss += loss.item()
-            _logger.info(f'Accuracy: {100 * correct / total:.2f} %, Loss: {valid_loss / len(val_loader):.5f}')
+            _logger.info(f'Accuracy: {100 * correct / total:.2f}%, Loss: {valid_loss / len(val_loader):.5f}')
 
             mixnet_s, _ = model.children()
             self.last_model_path = best_model_path[: best_model_path.rfind('/') + 1] + 'last_model_path.pth'
@@ -1008,6 +1008,5 @@ class Trainer:
                 _logger.info(f'🎯 CHECKPOINT:  Validation Loss ({self.min_valid_loss / len(val_loader):.5f} ==> {valid_loss / len(val_loader):.5f})')
                 self.min_valid_loss = valid_loss
                 torch.save(mixnet_s.state_dict(), best_model_path)
-            _logger.info('\n')
         _logger.info(f'🚀 Best model: {best_model_path}')
         return best_model_path
